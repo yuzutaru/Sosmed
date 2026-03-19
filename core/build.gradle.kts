@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
 }
 
 android {
@@ -53,4 +54,25 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    //Room
+    implementation(libs.androidx.room.runtime)
+    // optional - Kotlin Extensions and Coroutines support for Room
+    implementation(libs.androidx.room.ktx)
+    // optional - Test helpers
+    testImplementation(libs.androidx.room.testing)
+    // optional - Paging 3 Integration
+    implementation(libs.androidx.room.paging)
+    // ADD THIS LINE: This is what generates UserDB_Impl
+    ksp(libs.androidx.room.compiler)
+
+    //DataStore
+    implementation(libs.androidx.datastore.preferences)
+
+    //Mockk
+    testImplementation(libs.io.mockk)
+
+    //Coroutine
+    implementation(libs.org.jetbrains.kotlinx.coroutines.android)
+    testImplementation(libs.org.jetbrains.kotlinx.coroutines.test)
 }
