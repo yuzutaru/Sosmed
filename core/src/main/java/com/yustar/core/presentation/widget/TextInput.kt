@@ -26,7 +26,7 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.yustar.core.ui.PokeApp_JetpackComposeTheme
+import com.yustar.core.ui.theme.SosmedTheme
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
@@ -96,7 +96,7 @@ fun TextInput(
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_4)
 @Composable
 fun NightModePreviewTextInput() {
-    PokeApp_JetpackComposeTheme {
+    SosmedTheme() {
         TextInput(
             "Email",
             "",
@@ -108,7 +108,7 @@ fun NightModePreviewTextInput() {
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.PIXEL_4)
 @Composable
 fun LightModePreviewTextInput() {
-    PokeApp_JetpackComposeTheme {
+    SosmedTheme {
         TextInput(
             "Password",
             "",
