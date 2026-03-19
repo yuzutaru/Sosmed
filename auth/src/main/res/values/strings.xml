@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_to_your_account">Login to your account</string>
+    <string name="email">Email</string>
+    <string name="email_or_username">Email / Username</string>
+    <string name="password">Password</string>
+    <string name="input_email">input email…</string>
+    <string name="input_password">input password…</string>
+    <string name="login">Login</string>
+    <string name="dont_have_an_account">Don\'t have an account?</string>
+    <string name="register">Register</string>
+    <string name="create_new_account">Create new account</string>
+    <string name="first_name">First Name</string>
+    <string name="input_first_name">input first name…</string>
+    <string name="last_name">Last Name</string>
+    <string name="input_last_name">input last name…</string>
+    <string name="address">Address</string>
+    <string name="input_address">input address…</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="input_phone_number">input phone number…</string>
+    <string name="error_email_password_required">Email and password are required</string>
+</resources>
