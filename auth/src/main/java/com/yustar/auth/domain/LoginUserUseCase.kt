@@ -16,14 +16,6 @@ open class LoginUserUseCase(
         username: String,
         password: String
     ): LoginResult {
-        val user = repository.getUser(username) ?: return LoginResult.UserNotFound
-
-        val success = repository.login(username, password)
-
-        if (success) {
-            session.login(username)
-            return LoginResult.Success
-        }
 
         return LoginResult.InvalidPassword
     }

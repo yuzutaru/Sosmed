@@ -2,15 +2,15 @@ package com.yustar.auth.di
 
 import android.content.Context
 import androidx.datastore.preferences.preferencesDataStore
-import androidx.room.Room
-import com.yustar.core.data.local.UserDB
-import com.yustar.core.data.repository.UserRepository
-import com.yustar.core.data.repository.UserRepositoryImpl
 import com.yustar.auth.domain.LoginUserUseCase
 import com.yustar.auth.domain.LogoutUseCase
 import com.yustar.auth.domain.RegisterUserUseCase
 import com.yustar.auth.presentation.viewmodel.LoginViewModel
 import com.yustar.auth.presentation.viewmodel.RegisterViewModel
+import com.yustar.core.data.remote.UsersApi
+import com.yustar.core.data.remote.model.ResponseHandler
+import com.yustar.core.data.repository.UserRepository
+import com.yustar.core.data.repository.UserRepositoryImpl
 import com.yustar.core.session.SessionManager
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
@@ -26,21 +26,14 @@ val authModule = module {
     // DataStore
     single { androidContext().dataStore }
 
-    // Room
-    single {
-        Room.databaseBuilder(
-            androidContext(),
-            UserDB::class.java,
-            "app_db"
-        ).build()
-    }
-
-    single { get<UserDB>().userDao() }
-
     // Repository
+    single { UsersApi::class.java }
     single<UserRepository> {
-        UserRepositoryImpl(get())
+        UserRepositoryImpl(get(), get())
     }
+
+    // Response Handler
+    single { ResponseHandler() }
 
     // Session
     single { SessionManager(get()) }
