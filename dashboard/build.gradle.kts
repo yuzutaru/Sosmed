@@ -1,10 +1,10 @@
 plugins {
-    alias(libs.plugins.android.application)
+    alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.yustar.sosmed"
+    namespace = "com.yustar.dashboard"
     compileSdk {
         version = release(36) {
             minorApiLevel = 1
@@ -12,13 +12,10 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.yustar.sosmed"
         minSdk = 24
-        targetSdk = 36
-        versionCode = 1
-        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles("consumer-rules.pro")
     }
 
     buildTypes {
@@ -49,6 +46,7 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.compose.material.icons.extended)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
@@ -60,21 +58,4 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(project(":core"))
-    implementation(project(":auth"))
-    implementation(project(":dashboard"))
-
-
-    // Koin
-    implementation(libs.io.insert.koin.android)
-    implementation(libs.io.insert.koin.androidx.compose)
-    testImplementation(libs.io.insert.koin.test)
-    androidTestImplementation(libs.io.insert.koin.test)
-
-    // Mockk
-    testImplementation(libs.io.mockk)
-    androidTestImplementation(libs.io.mockk)
-    androidTestImplementation(libs.io.mockk.android)
-
-    // Splash Screen
-    implementation(libs.androidx.core.splashscreen)
 }

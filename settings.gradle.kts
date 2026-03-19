@@ -26,3 +26,4 @@ rootProject.name = "Sosmed"
 include(":app")
 include(":core")
 include(":auth")
+include(":dashboard")
