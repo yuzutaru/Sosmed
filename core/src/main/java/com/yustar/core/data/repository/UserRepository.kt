@@ -14,6 +14,7 @@ interface UserRepository {
     suspend fun authRegister(authRequest: AuthRequest): Resource<AuthResponse>
     suspend fun login(loginRequest: LoginRequest): Resource<LoginResponse>
     suspend fun refreshToken(refreshTokenRequest: RefreshTokenRequest): Resource<RefreshTokenResponse>
+    suspend fun logout(token: String): Resource<Unit>
     suspend fun profileSignUp(profileRequest: ProfileRequest): Resource<Unit>
     suspend fun updateProfile(id: String, updateProfileRequest: UpdateProfileRequest): Resource<Unit>
 }

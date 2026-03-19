@@ -43,6 +43,12 @@ interface UsersApi {
         @Header("apikey") apiKey: String = BuildConfig.SUPABASE_KEY
     ): RefreshTokenResponse
 
+    @POST("auth/v1/logout")
+    suspend fun logout(
+        @Header("apikey") apiKey: String = BuildConfig.SUPABASE_KEY,
+        @Header("Authorization") authorization: String
+    ): Response<Unit>
+
     @POST("rest/v1/profiles")
     suspend fun profileSignUp(
         @Body profileRequest: ProfileRequest,

@@ -43,6 +43,19 @@ class UserRepositoryImpl(
         }
     }
 
+    override suspend fun logout(token: String): Resource<Unit> {
+        return try {
+            val response = api.logout(authorization = "Bearer $token")
+            if (response.code() == 204) {
+                responseHandler.handleResponse(response)
+            } else {
+                Resource.error(null, "Failed to logout")
+            }
+        } catch (e: Exception) {
+            responseHandler.handleException(e)
+        }
+    }
+
     override suspend fun profileSignUp(profileRequest: ProfileRequest): Resource<Unit> {
         return try {
             val response = api.profileSignUp(profileRequest)

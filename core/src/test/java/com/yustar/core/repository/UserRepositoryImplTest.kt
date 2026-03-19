@@ -124,6 +124,51 @@ class UserRepositoryImplTest {
     }
 
     @Test
+    fun `logout success with 204 returns success resource`() = runTest {
+        // Arrange
+        val token = "token"
+        val response = Response.success(204, Unit)
+
+        coEvery { api.logout(any(), any()) } returns response
+
+        // Act
+        val result = repository.logout(token)
+
+        // Assert
+        assertEquals(Status.SUCCESS, result.status)
+    }
+
+    @Test
+    fun `logout failure with not 204 returns error resource`() = runTest {
+        // Arrange
+        val token = "token"
+        val response = Response.success(200, Unit) // Success but not 204
+
+        coEvery { api.logout(any(), any()) } returns response
+
+        // Act
+        val result = repository.logout(token)
+
+        // Assert
+        assertEquals(Status.ERROR, result.status)
+        assertEquals("Failed to logout", result.message)
+    }
+
+    @Test
+    fun `logout exception returns error resource`() = runTest {
+        // Arrange
+        val token = "token"
+        coEvery { api.logout(any(), any()) } throws Exception()
+
+        // Act
+        val result = repository.logout(token)
+
+        // Assert
+        assertEquals(Status.ERROR, result.status)
+        assertNotNull(result.message)
+    }
+
+    @Test
     fun `profileSignUp success with 201 returns success resource`() = runTest {
         // Arrange
         val profileRequest = ProfileRequest("id", "First", "Last", "Address", "123")
