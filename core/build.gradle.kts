@@ -1,8 +1,17 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
-    alias(libs.plugins.ksp)
 }
+
+val localProperties = Properties()
+val localPropertiesFile = rootProject.file("local.properties")
+if (localPropertiesFile.exists()) {
+    localProperties.load(localPropertiesFile.inputStream())
+}
+
+val supabaseKey = localProperties.getProperty("SUPABASE_KEY") ?: ""
 
 android {
     namespace = "com.yustar.core"
@@ -17,6 +26,8 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
+
+        buildConfigField("String", "SUPABASE_KEY", "\"$supabaseKey\"")
     }
 
     buildTypes {
@@ -34,6 +45,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -55,17 +67,6 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
-    // Room
-    implementation(libs.androidx.room.runtime)
-    // optional - Kotlin Extensions and Coroutines support for Room
-    implementation(libs.androidx.room.ktx)
-    // optional - Test helpers
-    testImplementation(libs.androidx.room.testing)
-    // optional - Paging 3 Integration
-    implementation(libs.androidx.room.paging)
-    // ADD THIS LINE: This is what generates UserDB_Impl
-    ksp(libs.androidx.room.compiler)
-
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
@@ -75,4 +76,9 @@ dependencies {
     // Coroutine
     implementation(libs.org.jetbrains.kotlinx.coroutines.android)
     testImplementation(libs.org.jetbrains.kotlinx.coroutines.test)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.okhttp.logging)
 }
