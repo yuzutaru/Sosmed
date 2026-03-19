@@ -63,6 +63,9 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Security Crypto
+    implementation(libs.androidx.security.crypto)
+
     // Koin
     implementation(libs.io.insert.koin.android)
     implementation(libs.io.insert.koin.androidx.compose)

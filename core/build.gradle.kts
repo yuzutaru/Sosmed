@@ -70,6 +70,9 @@ dependencies {
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
+    // Security Crypto
+    implementation(libs.androidx.security.crypto)
+
     // Mockk
     testImplementation(libs.io.mockk)
 
