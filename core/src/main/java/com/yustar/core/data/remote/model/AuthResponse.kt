@@ -11,10 +11,16 @@ data class AuthResponse(
     val role: String,
     @SerializedName("email")
     val email: String,
+    @SerializedName("email_confirmed_at")
+    val emailConfirmedAt: String?,
     @SerializedName("phone")
     val phone: String,
     @SerializedName("confirmation_sent_at")
     val confirmationSentAt: String?,
+    @SerializedName("confirmed_at")
+    val confirmedAt: String?,
+    @SerializedName("last_sign_in_at")
+    val lastSignInAt: String?,
     @SerializedName("app_metadata")
     val appMetadata: AppMetadata,
     @SerializedName("user_metadata")
