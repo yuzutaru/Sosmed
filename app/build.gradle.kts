@@ -48,11 +48,32 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.navigation.compose)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    androidTestImplementation(libs.androidx.navigation.testing)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    implementation(project(":auth"))
+    implementation(project(":core"))
+
+
+    // Koin
+    implementation(libs.io.insert.koin.android)
+    implementation(libs.io.insert.koin.androidx.compose)
+    testImplementation(libs.io.insert.koin.test)
+    androidTestImplementation(libs.io.insert.koin.test)
+
+    // Mockk
+    testImplementation(libs.io.mockk)
+    androidTestImplementation(libs.io.mockk)
+    androidTestImplementation(libs.io.mockk.android)
+
+    // Splash Screen
+    implementation(libs.androidx.core.splashscreen)
 }

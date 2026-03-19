@@ -19,6 +19,7 @@ appcompatVersion = "1.7.1"
 materialVersion = "1.13.0"
 navigation = "2.9.7"
 koinVersion = "4.2.0-RC1"
+splashScreenVersion = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -65,6 +66,9 @@ material = { group = "com.google.android.material", name = "material", version.r
 io-insert-koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koinVersion" }
 io-insert-koin-androidx-compose = { group = "io.insert-koin", name = "koin-androidx-compose", version.ref = "koinVersion" }
 io-insert-koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koinVersion" }
+
+# Splash Screen
+androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashScreenVersion" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

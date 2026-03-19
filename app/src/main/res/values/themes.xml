@@ -2,4 +2,13 @@
 <resources>
 
     <style name="Theme.Sosmed" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- The background color of the splash screen -->
+        <item name="windowSplashScreenBackground">#FFFFFF</item>
+        <!-- The icon in the center (use the one you just created) -->
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
+        <!-- Theme to switch to after the splash screen is gone -->
+        <item name="postSplashScreenTheme">@style/Theme.Sosmed</item>
+    </style>
 </resources>
