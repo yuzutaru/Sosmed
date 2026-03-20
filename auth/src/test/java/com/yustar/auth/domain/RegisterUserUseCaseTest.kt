@@ -24,12 +24,14 @@ class RegisterUserUseCaseTest {
     @Test
     fun `when invoke is called and auth is successful, it should call profileSignUp`() = runTest {
         // Given
-        val username = "testUser"
-        val password = "password123"
-        val firstName = "John"
-        val lastName = "Doe"
-        val address = "123 Main St"
-        val phoneNumber = "555-1234"
+        val dto = RegisterDto(
+            username = "testUser",
+            password = "password123",
+            firstName = "John",
+            lastName = "Doe",
+            address = "123 Main St",
+            phoneNumber = "555-1234"
+        )
         val userId = "user-id-123"
 
         val authResponse = mockk<AuthResponse> {
@@ -40,30 +42,32 @@ class RegisterUserUseCaseTest {
         coEvery { repository.profileSignUp(any()) } returns Resource.success(Unit)
 
         // When
-        registerUserUseCase(username, password, firstName, lastName, address, phoneNumber)
+        registerUserUseCase(dto)
 
         // Then
         coVerify { repository.authRegister(match {
-            it.email == username && it.password == password && it.data.username == username
+            it.email == dto.username && it.password == dto.password && it.data.username == dto.username
         }) }
         coVerify { repository.profileSignUp(match {
-            it.id == userId && it.firstName == firstName && it.lastName == lastName &&
-            it.address == address && it.phoneNumber == phoneNumber
+            it.id == userId && it.firstName == dto.firstName && it.lastName == dto.lastName &&
+            it.address == dto.address && it.phoneNumber == dto.phoneNumber
         }) }
     }
 
     @Test
     fun `when invoke is called and auth fails, it should throw Exception and not call profileSignUp`() = runTest {
         // Given
-        val username = "testUser"
-        val password = "password123"
+        val dto = RegisterDto(
+            username = "testUser",
+            password = "password123"
+        )
         val errorMessage = "Auth failed"
 
         coEvery { repository.authRegister(any()) } returns Resource.error(null, errorMessage)
 
         // When - Use runCatching to capture the exception within the coroutine
         val result = runCatching {
-            registerUserUseCase(username, password)
+            registerUserUseCase(dto)
         }
         val exception = result.exceptionOrNull()
 
@@ -76,8 +80,10 @@ class RegisterUserUseCaseTest {
     @Test
     fun `when invoke is called and auth succeeds but profileSignUp fails, it should throw Exception`() = runTest {
         // Given
-        val username = "testUser"
-        val password = "password123"
+        val dto = RegisterDto(
+            username = "testUser",
+            password = "password123"
+        )
         val userId = "user-id-123"
         val errorMessage = "Profile creation failed"
 
@@ -90,7 +96,7 @@ class RegisterUserUseCaseTest {
 
         // When
         val result = runCatching {
-            registerUserUseCase(username, password)
+            registerUserUseCase(dto)
         }
         val exception = result.exceptionOrNull()
 

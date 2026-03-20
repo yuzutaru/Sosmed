@@ -10,18 +10,11 @@ class RegisterUserUseCase(
     private val repository: UserRepository
 ) {
 
-    suspend operator fun invoke(
-        username: String,
-        password: String,
-        firstName: String = "",
-        lastName: String = "",
-        address: String = "",
-        phoneNumber: String = ""
-    ) {
+    suspend operator fun invoke(dto: RegisterDto) {
         val authRequest = AuthRequest(
-            email = username,
-            password = password,
-            data = RegisterData(username = username)
+            email = dto.username,
+            password = dto.password,
+            data = RegisterData(username = dto.username)
         )
 
         val authResource = repository.authRegister(authRequest)
@@ -31,10 +24,10 @@ class RegisterUserUseCase(
             if (authResponse != null) {
                 val profileRequest = ProfileRequest(
                     id = authResponse.id,
-                    firstName = firstName,
-                    lastName = lastName,
-                    address = address,
-                    phoneNumber = phoneNumber
+                    firstName = dto.firstName,
+                    lastName = dto.lastName,
+                    address = dto.address,
+                    phoneNumber = dto.phoneNumber
                 )
                 val profileResource = repository.profileSignUp(profileRequest)
                 if (profileResource.status == Status.ERROR) {

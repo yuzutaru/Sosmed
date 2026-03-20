@@ -86,14 +86,7 @@ class RegisterViewModelTest {
         viewModel.onEvent(RegisterUiEvent.OnPasswordChanged(password))
 
         coEvery { 
-            registerUserUseCase(
-                username = any(),
-                password = any(),
-                firstName = any(),
-                lastName = any(),
-                address = any(),
-                phoneNumber = any()
-            ) 
+            registerUserUseCase(any()) 
         } returns Unit
 
         // When
@@ -114,14 +107,7 @@ class RegisterViewModelTest {
         viewModel.onEvent(RegisterUiEvent.OnPasswordChanged("password123"))
         
         coEvery { 
-            registerUserUseCase(
-                username = any(),
-                password = any(),
-                firstName = any(),
-                lastName = any(),
-                address = any(),
-                phoneNumber = any()
-            ) 
+            registerUserUseCase(any()) 
         } throws Exception(errorMessage)
 
         // When
@@ -140,14 +126,7 @@ class RegisterViewModelTest {
         viewModel.onEvent(RegisterUiEvent.OnUsernameChanged("testuser"))
         viewModel.onEvent(RegisterUiEvent.OnPasswordChanged("password123"))
         coEvery { 
-            registerUserUseCase(
-                username = any(),
-                password = any(),
-                firstName = any(),
-                lastName = any(),
-                address = any(),
-                phoneNumber = any()
-            ) 
+            registerUserUseCase(any())
         } returns Unit
 
         viewModel.register()
