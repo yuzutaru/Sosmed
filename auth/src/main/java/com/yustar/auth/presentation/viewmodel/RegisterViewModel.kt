@@ -2,7 +2,7 @@ package com.yustar.auth.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.yustar.auth.domain.RegisterDto
+import com.yustar.auth.domain.model.RegisterUserParams
 import com.yustar.auth.domain.RegisterUserUseCase
 import com.yustar.auth.presentation.event.RegisterUiEvent
 import com.yustar.auth.presentation.state.RegisterUiState
@@ -39,7 +39,7 @@ class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, error = "") }
             try {
-                val dto = RegisterDto(
+                val params = RegisterUserParams(
                     username = _uiState.value.username,
                     password = _uiState.value.password,
                     firstName = _uiState.value.firstName,
@@ -47,7 +47,7 @@ class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : 
                     address = _uiState.value.address,
                     phoneNumber = _uiState.value.phoneNumber
                 )
-                registerUserUseCase(dto)
+                registerUserUseCase(params)
                 _uiState.update { it.copy(isLoading = false, isSuccess = true) }
             } catch (e: Exception) {
                 _uiState.update { it.copy(isLoading = false, error = e.message ?: "Unknown error") }

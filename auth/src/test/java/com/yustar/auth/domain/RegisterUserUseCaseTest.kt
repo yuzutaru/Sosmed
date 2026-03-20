@@ -1,5 +1,6 @@
 package com.yustar.auth.domain
 
+import com.yustar.auth.domain.model.RegisterUserParams
 import com.yustar.core.data.remote.model.AuthResponse
 import com.yustar.core.data.remote.model.Resource
 import com.yustar.core.data.repository.UserRepository
@@ -24,7 +25,7 @@ class RegisterUserUseCaseTest {
     @Test
     fun `when invoke is called and auth is successful, it should call profileSignUp`() = runTest {
         // Given
-        val dto = RegisterDto(
+        val params = RegisterUserParams(
             username = "testUser",
             password = "password123",
             firstName = "John",
@@ -42,22 +43,22 @@ class RegisterUserUseCaseTest {
         coEvery { repository.profileSignUp(any()) } returns Resource.success(Unit)
 
         // When
-        registerUserUseCase(dto)
+        registerUserUseCase(params)
 
         // Then
         coVerify { repository.authRegister(match {
-            it.email == dto.username && it.password == dto.password && it.data.username == dto.username
+            it.email == params.username && it.password == params.password && it.data.username == params.username
         }) }
         coVerify { repository.profileSignUp(match {
-            it.id == userId && it.firstName == dto.firstName && it.lastName == dto.lastName &&
-            it.address == dto.address && it.phoneNumber == dto.phoneNumber
+            it.id == userId && it.firstName == params.firstName && it.lastName == params.lastName &&
+            it.address == params.address && it.phoneNumber == params.phoneNumber
         }) }
     }
 
     @Test
     fun `when invoke is called and auth fails, it should throw Exception and not call profileSignUp`() = runTest {
         // Given
-        val dto = RegisterDto(
+        val params = RegisterUserParams(
             username = "testUser",
             password = "password123"
         )
@@ -67,7 +68,7 @@ class RegisterUserUseCaseTest {
 
         // When - Use runCatching to capture the exception within the coroutine
         val result = runCatching {
-            registerUserUseCase(dto)
+            registerUserUseCase(params)
         }
         val exception = result.exceptionOrNull()
 
@@ -80,7 +81,7 @@ class RegisterUserUseCaseTest {
     @Test
     fun `when invoke is called and auth succeeds but profileSignUp fails, it should throw Exception`() = runTest {
         // Given
-        val dto = RegisterDto(
+        val params = RegisterUserParams(
             username = "testUser",
             password = "password123"
         )
@@ -96,7 +97,7 @@ class RegisterUserUseCaseTest {
 
         // When
         val result = runCatching {
-            registerUserUseCase(dto)
+            registerUserUseCase(params)
         }
         val exception = result.exceptionOrNull()
 

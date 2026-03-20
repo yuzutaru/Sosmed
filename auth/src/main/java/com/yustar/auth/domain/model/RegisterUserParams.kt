@@ -1,10 +1,10 @@
-package com.yustar.auth.domain
+package com.yustar.auth.domain.model
 
 /**
  * Created by Yustar Pramudana on 07/03/26.
  */
 
-data class RegisterDto(
+data class RegisterUserParams(
     val username: String,
     val password: String,
     val firstName: String = "",
