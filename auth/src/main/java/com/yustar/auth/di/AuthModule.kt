@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import com.yustar.auth.BuildConfig
 import com.yustar.auth.domain.LoginUserUseCase
 import com.yustar.auth.domain.LogoutUseCase
 import com.yustar.auth.domain.RefreshUserTokenUseCase
@@ -16,9 +17,13 @@ import com.yustar.core.data.remote.model.ResponseHandler
 import com.yustar.core.data.repository.UserRepository
 import com.yustar.core.data.repository.UserRepositoryImpl
 import com.yustar.core.session.SessionManager
+import okhttp3.OkHttpClient
+import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
@@ -45,14 +50,37 @@ val authModule = module {
         )
     }
 
+    // Response Handler
+    single { ResponseHandler() }
+
+    // Network
+    single {
+        val loggingInterceptor = HttpLoggingInterceptor().apply {
+            level = if (BuildConfig.DEBUG) {
+                HttpLoggingInterceptor.Level.BODY
+            } else {
+                HttpLoggingInterceptor.Level.NONE
+            }
+        }
+
+        val client = OkHttpClient.Builder()
+            .addInterceptor(loggingInterceptor)
+            .build()
+
+        Retrofit.Builder()
+            .baseUrl(BuildConfig.BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+    }
+    single<UsersApi> { get<Retrofit>().create(UsersApi::class.java) }
+
     // Repository
-    single { UsersApi::class.java }
     single<UserRepository> {
         UserRepositoryImpl(get(), get())
     }
 
-    // Response Handler
-    single { ResponseHandler() }
+
 
     // Session
     single { SessionManager(get(), get()) }
