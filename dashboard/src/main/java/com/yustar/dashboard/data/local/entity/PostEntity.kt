@@ -20,3 +20,12 @@ data class PostMediaEntity(
     val url: String,
     val mediaType: String?
 )
+
+@Entity(tableName = "post_profiles")
+data class PostProfileEntity(
+    @PrimaryKey
+    val userId: String,
+    val postId: String,
+    val firstName: String,
+    val lastName: String
+)

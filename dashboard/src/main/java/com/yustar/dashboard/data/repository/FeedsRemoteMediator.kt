@@ -11,6 +11,7 @@ import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.entity.PostEntity
 import com.yustar.dashboard.data.local.entity.PostMediaEntity
+import com.yustar.dashboard.data.local.entity.PostProfileEntity
 import com.yustar.dashboard.data.local.entity.RemoteKeyEntity
 import com.yustar.dashboard.data.local.model.PostWithMedia
 import com.yustar.dashboard.data.remote.FeedsApi
@@ -50,7 +51,7 @@ class FeedsRemoteMediator(
         try {
             var accessToken = sessionManager.getAccessToken() ?: ""
             val offset = page * state.config.pageSize
-            
+
             val response = try {
                 api.getFeedsPaged(
                     authorization = "Bearer $accessToken",
@@ -66,7 +67,7 @@ class FeedsRemoteMediator(
                         )
                         sessionManager.updateAccessToken(refreshResponse.accessToken)
                         accessToken = refreshResponse.accessToken
-                        
+
                         api.getFeedsPaged(
                             authorization = "Bearer $accessToken",
                             limit = state.config.pageSize,
@@ -87,6 +88,7 @@ class FeedsRemoteMediator(
                     database.remoteKeyDao().clearRemoteKeys()
                     database.postDao().clearPosts()
                     database.postDao().clearMedia()
+                    database.postDao().clearProfile()
                 }
                 val prevKey = if (page == 0) null else page - 1
                 val nextKey = if (endOfPaginationReached) null else page + 1
@@ -116,6 +118,18 @@ class FeedsRemoteMediator(
                     } ?: emptyList()
                 }
                 database.postDao().insertMedia(mediaEntities)
+
+                val profileEntities = response.flatMap { postDto ->
+                    postDto.profiles?. { profileDto ->
+                        PostProfileEntity(
+                            userId = profileDto.id,
+                            postId = postDto.id,
+                            firstName = profileDto.firstName ?: "",
+                            lastName = profileDto.lastName ?: ""
+                        )
+                    }
+                }
+                database.postDao().insertProfile(profileEntities)
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: Exception) {

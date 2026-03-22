@@ -5,7 +5,8 @@ data class Post(
     val createdAt: String,
     val content: String?,
     val userId: String?,
-    val postMedia: List<PostMedia>
+    val postMedia: List<PostMedia>,
+    val profiles: PostProfile?
 )
 
 data class PostMedia(
@@ -13,4 +14,9 @@ data class PostMedia(
     val postId: String,
     val url: String,
     val mediaType: String?
+)
+
+data class PostProfile(
+    val firstName: String,
+    val lastName: String
 )

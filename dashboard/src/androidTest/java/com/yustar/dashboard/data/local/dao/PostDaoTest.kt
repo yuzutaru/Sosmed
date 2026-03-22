@@ -7,9 +7,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.entity.PostEntity
 import com.yustar.dashboard.data.local.entity.PostMediaEntity
+import com.yustar.dashboard.data.local.entity.PostProfileEntity
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -35,17 +37,13 @@ class PostDaoTest {
     }
 
     @Test
-    fun insertPostsAndRead_returnsCorrectData() = runBlocking {
+    fun insertPostsAndReadMedia_returnsCorrectData() = runBlocking {
         val posts = listOf(
             PostEntity("1", "2023-10-01T10:00:00Z", "Hello World", "user1"),
             PostEntity("2", "2023-10-01T11:00:00Z", "Second Post", "user2")
         )
         postDao.insertPosts(posts)
 
-        // For PagingSource, we can test individual media insertion or clear logic.
-        // Direct query testing for PagingSource is usually done via Paging testing library,
-        // but we can verify media relation here.
-        
         val media = listOf(
             PostMediaEntity("m1", "1", "url1", "image"),
             PostMediaEntity("m2", "1", "url2", "image")
@@ -58,17 +56,33 @@ class PostDaoTest {
     }
 
     @Test
-    fun clearPosts_removesAllData() = runBlocking {
+    fun insertProfileAndRead_returnsCorrectData() = runBlocking {
+        val profile = PostProfileEntity(
+            userId = "user1",
+            postId = "1",
+            firstName = "John",
+            lastName = "Doe"
+        )
+        postDao.insertProfile(profile)
+
+        val retrievedProfile = postDao.getProfileForPost("1")
+        assertNotNull(retrievedProfile)
+        assertEquals("user1", retrievedProfile.userId)
+        assertEquals("John", retrievedProfile.firstName)
+        assertEquals("Doe", retrievedProfile.lastName)
+    }
+
+    @Test
+    fun clearPostsAndMedia_removesAllData() = runBlocking {
         val posts = listOf(PostEntity("1", "now", "content", "user1"))
-        postDao.insertPosts(posts)
-        
-        postDao.clearPosts()
-        
-        // Verifying clear via a helper if needed or just checking media
         val media = listOf(PostMediaEntity("m1", "1", "url1", "image"))
-        postDao.insertMedia(media)
-        postDao.clearMedia()
         
+        postDao.insertPosts(posts)
+        postDao.insertMedia(media)
+
+        postDao.clearPosts()
+        postDao.clearMedia()
+
         val retrievedMedia = postDao.getMediaForPost("1")
         assertEquals(0, retrievedMedia.size)
     }
