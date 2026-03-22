@@ -13,13 +13,20 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import com.yustar.core.ui.theme.SosmedTheme
+import com.yustar.dashboard.presentation.viewmodel.FeedsViewModel
+import org.koin.androidx.compose.koinViewModel
 
 /**
  * Created by Yustar Pramudana on 21/03/26.
  */
 
 @Composable
-fun FeedsScreen(innerPadding: PaddingValues) {
+fun FeedsScreen(innerPadding: PaddingValues, viewModel: FeedsViewModel = koinViewModel()) {
+    FeedsContent(innerPadding)
+}
+
+@Composable
+fun FeedsContent(innerPadding: PaddingValues) {
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -31,16 +38,16 @@ fun FeedsScreen(innerPadding: PaddingValues) {
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_4)
 @Composable
-fun NightModePreviewFeedsScreen() {
+fun NightModePreviewFeedsContent() {
     SosmedTheme {
-        FeedsScreen(PaddingValues())
+        FeedsContent(PaddingValues())
     }
 }
 
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.PIXEL_4)
 @Composable
-fun LightModePreviewFeedsScreen() {
+fun LightModePreviewFeedsContent() {
     SosmedTheme {
-        FeedsScreen(PaddingValues())
+        FeedsContent(PaddingValues())
     }
 }

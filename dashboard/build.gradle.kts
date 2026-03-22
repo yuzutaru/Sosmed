@@ -6,11 +6,7 @@ plugins {
 
 android {
     namespace = "com.yustar.dashboard"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         minSdk = 24
@@ -62,6 +58,10 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     implementation(project(":core"))
+
+    // Koin
+    implementation(libs.io.insert.koin.android)
+    implementation(libs.io.insert.koin.androidx.compose)
 
     // Retrofit
     implementation(libs.retrofit)

@@ -2,6 +2,7 @@ package com.yustar.sosmed
 
 import android.app.Application
 import com.yustar.auth.di.authModule
+import com.yustar.dashboard.di.dashboardModule
 import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.GlobalContext.startKoin
@@ -17,7 +18,10 @@ class SosmedApplication: Application() {
         startKoin {
             androidLogger()
             androidContext(this@SosmedApplication)
-            modules(authModule)
+            modules(
+                authModule,
+                dashboardModule
+            )
         }
     }
 }
