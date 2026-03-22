@@ -6,7 +6,11 @@ import androidx.paging.PagingData
 import androidx.paging.cachedIn
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.usecase.GetFeedsUseCase
+import com.yustar.dashboard.presentation.state.FeedsUiState
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * Created by Yustar Pramudana on 22/03/26.
@@ -16,6 +20,13 @@ class FeedsViewModel(
     getFeedsUseCase: GetFeedsUseCase
 ) : ViewModel() {
 
+    private val _uiState = MutableStateFlow(FeedsUiState())
+    val uiState: StateFlow<FeedsUiState> = _uiState.asStateFlow()
+
     val feeds: Flow<PagingData<Post>> = getFeedsUseCase()
         .cachedIn(viewModelScope)
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = "")
+    }
 }
