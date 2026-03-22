@@ -20,7 +20,7 @@ data class PostMediaResponseDto(
     val id: String,
     @SerializedName("post_id")
     val postId: String,
-    @SerializedName("url")
+    @SerializedName("media_url")
     val url: String,
     @SerializedName("media_type")
     val mediaType: String?

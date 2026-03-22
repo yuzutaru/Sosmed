@@ -13,6 +13,8 @@ import retrofit2.http.Query
 interface FeedsApi {
     @GET("rest/v1/posts")
     suspend fun getFeedsPaged(
+        @Header("apikey") apiKey: String = BuildConfig.SUPABASE_KEY,
+        @Header("Authorization") authorization: String,
         @Query("select") select: String = "*,post_media(*)",
         @Query("order") order: String = "created_at.desc",
         @Query("limit") limit: Int = 10,

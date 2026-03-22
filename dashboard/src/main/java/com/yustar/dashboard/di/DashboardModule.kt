@@ -29,7 +29,7 @@ val dashboardModule = module {
     single<FeedsApi> { get<Retrofit>().create(FeedsApi::class.java) }
 
     // Repository
-    single<FeedsRepository> { FeedsRepositoryImpl(get(), get()) }
+    single<FeedsRepository> { FeedsRepositoryImpl(get(), get(), get(), get()) }
 
     // UseCases
     factory { GetFeedsUseCase(get()) }

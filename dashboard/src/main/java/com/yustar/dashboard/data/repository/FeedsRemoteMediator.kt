@@ -5,17 +5,23 @@ import androidx.paging.LoadType
 import androidx.paging.PagingState
 import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
+import com.yustar.core.data.remote.UsersApi
+import com.yustar.core.data.remote.model.RefreshTokenRequest
+import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.entity.PostEntity
 import com.yustar.dashboard.data.local.entity.PostMediaEntity
 import com.yustar.dashboard.data.local.entity.RemoteKeyEntity
 import com.yustar.dashboard.data.local.model.PostWithMedia
 import com.yustar.dashboard.data.remote.FeedsApi
+import retrofit2.HttpException
 
 @OptIn(ExperimentalPagingApi::class)
 class FeedsRemoteMediator(
     private val api: FeedsApi,
-    private val database: FeedsDatabase
+    private val usersApi: UsersApi,
+    private val database: FeedsDatabase,
+    private val sessionManager: SessionManager
 ) : RemoteMediator<Int, PostWithMedia>() {
 
     override suspend fun load(
@@ -42,11 +48,37 @@ class FeedsRemoteMediator(
         }
 
         try {
+            var accessToken = sessionManager.getAccessToken() ?: ""
             val offset = page * state.config.pageSize
-            val response = api.getFeedsPaged(
-                limit = state.config.pageSize,
-                offset = offset
-            )
+            
+            val response = try {
+                api.getFeedsPaged(
+                    authorization = "Bearer $accessToken",
+                    limit = state.config.pageSize,
+                    offset = offset
+                )
+            } catch (e: HttpException) {
+                if (e.code() == 401 || e.code() == 403) {
+                    val refreshToken = sessionManager.getRefreshToken()
+                    if (refreshToken != null) {
+                        val refreshResponse = usersApi.refreshToken(
+                            refreshTokenRequest = RefreshTokenRequest(refreshToken)
+                        )
+                        sessionManager.updateAccessToken(refreshResponse.accessToken)
+                        accessToken = refreshResponse.accessToken
+                        
+                        api.getFeedsPaged(
+                            authorization = "Bearer $accessToken",
+                            limit = state.config.pageSize,
+                            offset = offset
+                        )
+                    } else {
+                        throw e
+                    }
+                } else {
+                    throw e
+                }
+            }
 
             val endOfPaginationReached = response.isEmpty()
 

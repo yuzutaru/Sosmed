@@ -5,6 +5,8 @@ import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
+import com.yustar.core.data.remote.UsersApi
+import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.data.repository.FeedsRemoteMediator
@@ -15,7 +17,9 @@ import kotlinx.coroutines.flow.map
 
 class FeedsRepositoryImpl(
     private val api: FeedsApi,
-    private val database: FeedsDatabase
+    private val usersApi: UsersApi,
+    private val database: FeedsDatabase,
+    private val sessionManager: SessionManager
 ) : FeedsRepository {
 
     @OptIn(ExperimentalPagingApi::class)
@@ -30,7 +34,9 @@ class FeedsRepositoryImpl(
             ),
             remoteMediator = FeedsRemoteMediator(
                 api = api,
-                database = database
+                usersApi = usersApi,
+                database = database,
+                sessionManager = sessionManager
             ),
             pagingSourceFactory = pagingSourceFactory
         ).flow.map { pagingData ->
