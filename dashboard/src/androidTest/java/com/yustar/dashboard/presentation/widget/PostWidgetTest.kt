@@ -7,6 +7,7 @@ import androidx.compose.ui.test.onNodeWithText
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
+import com.yustar.dashboard.domain.model.PostProfile
 import org.junit.Rule
 import org.junit.Test
 
@@ -27,7 +28,8 @@ class PostWidgetTest {
                 url = "https://example.com/image.jpg",
                 mediaType = "image"
             )
-        )
+        ),
+        postProfile = PostProfile("dagelan", "")
     )
 
     @Test
@@ -38,8 +40,8 @@ class PostWidgetTest {
             }
         }
 
-        // Verify default username
-        composeTestRule.onNodeWithText("dagelan").assertIsDisplayed()
+        // Verify username (constructed as "firstName lastName")
+        composeTestRule.onNodeWithText("dagelan ").assertIsDisplayed()
         
         // Verify default music name
         composeTestRule.onNodeWithText("Edith Whiskers • Home").assertIsDisplayed()

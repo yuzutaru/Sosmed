@@ -20,7 +20,7 @@ interface PostDao {
     suspend fun insertMedia(media: List<PostMediaEntity>)
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertProfile(profile: PostProfileEntity)
+    suspend fun insertProfiles(profiles: List<PostProfileEntity>)
 
     @Transaction
     @Query("SELECT * FROM posts ORDER BY createdAt DESC")

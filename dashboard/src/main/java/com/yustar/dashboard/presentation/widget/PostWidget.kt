@@ -42,12 +42,13 @@ import coil.compose.AsyncImage
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
+import com.yustar.dashboard.domain.model.PostProfile
 
 @Composable
 fun PostWidget(
     post: Post,
     modifier: Modifier = Modifier,
-    username: String = "dagelan", // Mocking since not in Post model yet
+    username: String = post.postProfile?.let { "${it.firstName} ${it.lastName}" } ?: "Unknown",
     avatarUrl: String? = null,
     musicName: String = "Edith Whiskers • Home",
     likeCount: String = "27.7K",
@@ -269,7 +270,8 @@ fun NightModePostWidgetPreview() {
                 createdAt = "",
                 content = "Sample content",
                 userId = "1",
-                postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image"))
+                postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image")),
+                postProfile = PostProfile("John", "Doe")
             )
         )
     }
@@ -285,7 +287,8 @@ fun LightModePreviewPostWidgetScreen() {
                 createdAt = "",
                 content = "Sample content",
                 userId = "1",
-                postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image"))
+                postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image")),
+                postProfile = PostProfile("John", "Doe")
             )
         )
     }

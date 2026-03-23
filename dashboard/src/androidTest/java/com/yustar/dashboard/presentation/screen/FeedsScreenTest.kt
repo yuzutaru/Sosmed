@@ -16,6 +16,7 @@ import androidx.paging.compose.collectAsLazyPagingItems
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
+import com.yustar.dashboard.domain.model.PostProfile
 import com.yustar.dashboard.presentation.state.FeedsUiState
 import kotlinx.coroutines.flow.flowOf
 import org.junit.Rule
@@ -32,14 +33,16 @@ class FeedsScreenTest {
             createdAt = "2023-10-27T10:00:00Z",
             content = "Post 1 content",
             userId = "user1",
-            postMedia = listOf(PostMedia("m1", "1", "url1", "image"))
+            postMedia = listOf(PostMedia("m1", "1", "url1", "image")),
+            postProfile = PostProfile("John", "Doe")
         ),
         Post(
             id = "2",
             createdAt = "2023-10-27T11:00:00Z",
             content = "Post 2 content",
             userId = "user2",
-            postMedia = listOf(PostMedia("m2", "2", "url2", "image"))
+            postMedia = listOf(PostMedia("m2", "2", "url2", "image")),
+            postProfile = PostProfile("Jane", "Smith")
         )
     )
 
@@ -56,9 +59,9 @@ class FeedsScreenTest {
             }
         }
 
-        // Check if posts are displayed. PostWidget defaults to "dagelan" for username.
-        // Since there are multiple posts, use onAllNodes and select the first one.
-        composeTestRule.onAllNodesWithText("dagelan").onFirst().assertIsDisplayed()
+        // Check if posts are displayed. PostWidget now uses "firstName lastName" from postProfile.
+        composeTestRule.onAllNodesWithText("John Doe").onFirst().assertIsDisplayed()
+        composeTestRule.onAllNodesWithText("Jane Smith").onFirst().assertIsDisplayed()
         composeTestRule.onAllNodesWithContentDescription("Post Media").onFirst().assertIsDisplayed()
     }
 

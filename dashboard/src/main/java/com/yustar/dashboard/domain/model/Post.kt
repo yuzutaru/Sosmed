@@ -6,7 +6,7 @@ data class Post(
     val content: String?,
     val userId: String?,
     val postMedia: List<PostMedia>,
-    val profiles: PostProfile?
+    val postProfile: PostProfile?
 )
 
 data class PostMedia(

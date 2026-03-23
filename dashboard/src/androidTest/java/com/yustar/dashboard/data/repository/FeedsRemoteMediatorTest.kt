@@ -69,7 +69,8 @@ class FeedsRemoteMediatorTest {
                 createdAt = "2023-01-01T00:00:00Z",
                 content = "Post 1",
                 userId = "user1",
-                postMedia = emptyList()
+                postMedia = emptyList(),
+                profiles = null
             )
         )
         coEvery { 
@@ -190,7 +191,7 @@ class FeedsRemoteMediatorTest {
         } returns mockRefreshResponse
 
         val mockFeedsResponse = listOf(
-            PostResponseDto("1", "date", "content", "user", emptyList())
+            PostResponseDto("1", "date", "content", "user", emptyList(), null)
         )
         coEvery { 
             api.getFeedsPaged(

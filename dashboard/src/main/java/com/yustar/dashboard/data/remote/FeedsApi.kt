@@ -15,7 +15,7 @@ interface FeedsApi {
     suspend fun getFeedsPaged(
         @Header("apikey") apiKey: String = BuildConfig.SUPABASE_KEY,
         @Header("Authorization") authorization: String,
-        @Query("select") select: String = "*,post_media(*)",
+        @Query("select") select: String = "*,profiles(*),post_media(*)",
         @Query("order") order: String = "created_at.desc",
         @Query("limit") limit: Int = 10,
         @Query("offset") offset: Int

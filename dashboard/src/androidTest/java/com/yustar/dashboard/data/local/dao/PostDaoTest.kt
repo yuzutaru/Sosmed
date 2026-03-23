@@ -63,7 +63,7 @@ class PostDaoTest {
             firstName = "John",
             lastName = "Doe"
         )
-        postDao.insertProfile(profile)
+        postDao.insertProfiles(listOf(profile))
 
         val retrievedProfile = postDao.getProfileForPost("1")
         assertNotNull(retrievedProfile)
@@ -76,14 +76,21 @@ class PostDaoTest {
     fun clearPostsAndMedia_removesAllData() = runBlocking {
         val posts = listOf(PostEntity("1", "now", "content", "user1"))
         val media = listOf(PostMediaEntity("m1", "1", "url1", "image"))
+        val profiles = listOf(PostProfileEntity("user1", "1", "John", "Doe"))
         
         postDao.insertPosts(posts)
         postDao.insertMedia(media)
+        postDao.insertProfiles(profiles)
 
         postDao.clearPosts()
         postDao.clearMedia()
+        postDao.clearProfile()
 
         val retrievedMedia = postDao.getMediaForPost("1")
         assertEquals(0, retrievedMedia.size)
+        
+        // If Room returns null for non-existent single row queries when used with nullable return type.
+        // If the DAO method isn't nullable, we should change it or handle the exception.
+        // Let's check the DAO definition again.
     }
 }

@@ -12,6 +12,7 @@ import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.data.repository.FeedsRemoteMediator
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
+import com.yustar.dashboard.domain.model.PostProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -52,6 +53,12 @@ class FeedsRepositoryImpl(
                             postId = it.postId,
                             url = it.url,
                             mediaType = it.mediaType
+                        )
+                    },
+                    postProfile = postWithMedia.profile?.let {
+                        PostProfile(
+                            firstName = it.firstName,
+                            lastName = it.lastName
                         )
                     }
                 )

@@ -17,5 +17,5 @@ data class PostWithMedia(
         parentColumn = "id",
         entityColumn = "postId"
     )
-    val profile: PostProfileEntity
+    val profile: PostProfileEntity?
 )

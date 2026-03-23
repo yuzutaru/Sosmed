@@ -29,6 +29,7 @@ import androidx.paging.compose.itemKey
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
+import com.yustar.dashboard.domain.model.PostProfile
 import com.yustar.dashboard.presentation.state.FeedsUiState
 import com.yustar.dashboard.presentation.viewmodel.FeedsViewModel
 import com.yustar.dashboard.presentation.widget.PostWidget
@@ -120,7 +121,8 @@ private val samplePosts = listOf(
         userId = "user_1",
         postMedia = listOf(
             PostMedia("m1", "1", "https://picsum.photos/seed/post1/800/800", "image")
-        )
+        ),
+        postProfile = PostProfile(firstName = "John", lastName = "Doe")
     ),
     Post(
         id = "2",
@@ -129,7 +131,8 @@ private val samplePosts = listOf(
         userId = "user_2",
         postMedia = listOf(
             PostMedia("m2", "2", "https://picsum.photos/seed/post2/800/800", "image")
-        )
+        ),
+        postProfile = PostProfile(firstName = "Jane", lastName = "Smith")
     )
 )
 

@@ -119,8 +119,8 @@ class FeedsRemoteMediator(
                 }
                 database.postDao().insertMedia(mediaEntities)
 
-                val profileEntities = response.flatMap { postDto ->
-                    postDto.profiles?. { profileDto ->
+                val profileEntities = response.mapNotNull { postDto ->
+                    postDto.profiles?.let { profileDto ->
                         PostProfileEntity(
                             userId = profileDto.id,
                             postId = postDto.id,
@@ -129,7 +129,7 @@ class FeedsRemoteMediator(
                         )
                     }
                 }
-                database.postDao().insertProfile(profileEntities)
+                database.postDao().insertProfiles(profileEntities)
             }
             return MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         } catch (e: Exception) {
