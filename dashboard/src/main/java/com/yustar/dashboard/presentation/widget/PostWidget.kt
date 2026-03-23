@@ -22,12 +22,21 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.Feedback
+import androidx.compose.material.icons.outlined.HighlightOff
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -95,6 +104,8 @@ private fun PostHeader(
     musicName: String
 ) {
     val initials = (firstName.take(1) + lastName.take(1)).uppercase()
+    var showMenu by remember { mutableStateOf(false) }
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -145,28 +156,32 @@ private fun PostHeader(
                     tint = Color(0xFF1DA1F2)
                 )*/
             }
-
-            // Music Icon and Text
-            /*Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    imageVector = Icons.Default.MusicNote,
-                    contentDescription = "Music",
-                    modifier = Modifier.size(12.dp)
-                )
-                Spacer(modifier = Modifier.width(4.dp))
-                Text(
-                    text = musicName,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-                )
-            }*/
         }
 
-        IconButton(onClick = { }) {
+        // Music Icon and Text
+        /*Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                imageVector = Icons.Default.MoreVert,
-                contentDescription = "More"
+                imageVector = Icons.Default.MusicNote,
+                contentDescription = "Music",
+                modifier = Modifier.size(12.dp)
             )
+            Spacer(modifier = Modifier.width(4.dp))
+            Text(
+                text = musicName,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
+            )
+        }*/
+
+        Box {
+            IconButton(onClick = { showMenu = true }) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = "More"
+                )
+            }
+
+            PostMoreDialog(showMenu, { showMenu = false })
         }
     }
 }

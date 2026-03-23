@@ -42,9 +42,9 @@ class PostWidgetTest {
 
         // Verify username (constructed as "firstName lastName")
         composeTestRule.onNodeWithText("dagelan ").assertIsDisplayed()
-        
-        // Verify default music name
-        composeTestRule.onNodeWithText("Edith Whiskers • Home").assertIsDisplayed()
+
+        // Verify initials are shown when avatarUrl is null ("dagelan" -> "D")
+        composeTestRule.onNodeWithText("D").assertIsDisplayed()
         
         // Verify default counts
         composeTestRule.onNodeWithText("27.7K").assertIsDisplayed()
@@ -55,27 +55,26 @@ class PostWidgetTest {
         composeTestRule.onNodeWithText("Liked by febrian_joss and others").assertIsDisplayed()
         
         // Verify key UI components via content descriptions
-        composeTestRule.onNodeWithContentDescription("Avatar").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Verified").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Post Media").assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Mute").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Share").assertIsDisplayed()
     }
 
     @Test
     fun postWidget_displaysCustomValues() {
         val customUsername = "test_user"
-        val customMusic = "Custom Music Name"
         val customLikes = "100"
         val customComments = "50"
         val customReposts = "10"
         val customLikedBy = "another_user"
+        val customAvatarUrl = "https://example.com/avatar.jpg"
 
         composeTestRule.setContent {
             SosmedTheme {
                 PostWidget(
                     post = mockPost,
                     username = customUsername,
-                    musicName = customMusic,
+                    avatarUrl = customAvatarUrl,
                     likeCount = customLikes,
                     commentCount = customComments,
                     repostCount = customReposts,
@@ -86,7 +85,7 @@ class PostWidgetTest {
 
         // Verify custom values are rendered
         composeTestRule.onNodeWithText(customUsername).assertIsDisplayed()
-        composeTestRule.onNodeWithText(customMusic).assertIsDisplayed()
+        composeTestRule.onNodeWithContentDescription("Avatar").assertIsDisplayed()
         composeTestRule.onNodeWithText(customLikes).assertIsDisplayed()
         composeTestRule.onNodeWithText(customComments).assertIsDisplayed()
         composeTestRule.onNodeWithText(customReposts).assertIsDisplayed()
