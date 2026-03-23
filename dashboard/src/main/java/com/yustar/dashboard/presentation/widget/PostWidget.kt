@@ -65,6 +65,8 @@ fun PostWidget(
         // Header
         PostHeader(
             username = username,
+            firstName = post.postProfile?.firstName ?: "",
+            lastName = post.postProfile?.lastName ?: "",
             avatarUrl = avatarUrl,
             musicName = musicName
         )
@@ -87,24 +89,42 @@ fun PostWidget(
 @Composable
 private fun PostHeader(
     username: String,
+    firstName: String,
+    lastName: String,
     avatarUrl: String?,
     musicName: String
 ) {
+    val initials = (firstName.take(1) + lastName.take(1)).uppercase()
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        AsyncImage(
-            model = avatarUrl,
-            contentDescription = "Avatar",
+        Box(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(Color.Gray),
-            contentScale = ContentScale.Crop
-        )
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            contentAlignment = Alignment.Center
+        ) {
+            if (!avatarUrl.isNullOrBlank()) {
+                AsyncImage(
+                    model = avatarUrl,
+                    contentDescription = "Avatar",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Text(
+                    text = initials,
+                    style = MaterialTheme.typography.titleMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                )
+            }
+        }
 
         Spacer(modifier = Modifier.width(12.dp))
 
@@ -117,14 +137,17 @@ private fun PostHeader(
                     )
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                Icon(
+                // Verified icon
+                /*Icon(
                     imageVector = Icons.Default.Verified,
                     contentDescription = "Verified",
                     modifier = Modifier.size(14.dp),
                     tint = Color(0xFF1DA1F2)
-                )
+                )*/
             }
-            Row(verticalAlignment = Alignment.CenterVertically) {
+
+            // Music Icon and Text
+            /*Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.MusicNote,
                     contentDescription = "Music",
@@ -136,7 +159,7 @@ private fun PostHeader(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
                 )
-            }
+            }*/
         }
 
         IconButton(onClick = { }) {
