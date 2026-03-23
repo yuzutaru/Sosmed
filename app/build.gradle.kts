@@ -1,20 +1,18 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
     namespace = "com.yustar.sosmed"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.yustar.sosmed"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -64,11 +62,10 @@ dependencies {
     implementation(project(":dashboard"))
 
 
-    // Koin
-    implementation(libs.io.insert.koin.android)
-    implementation(libs.io.insert.koin.androidx.compose)
-    testImplementation(libs.io.insert.koin.test)
-    androidTestImplementation(libs.io.insert.koin.test)
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
 
     // Mockk
     testImplementation(libs.io.mockk)

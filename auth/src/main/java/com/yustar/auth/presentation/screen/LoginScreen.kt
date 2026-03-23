@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yustar.auth.R
 import com.yustar.auth.presentation.event.LoginUiEvent
@@ -42,7 +43,6 @@ import com.yustar.auth.presentation.widget.TextInput
 import com.yustar.core.ui.theme.Red60
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.core.ui.theme.Turquoise25
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
@@ -50,7 +50,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun LoginScreen(
-    viewModel: LoginViewModel = koinViewModel(),
+    viewModel: LoginViewModel = hiltViewModel(),
     onLoginSuccess: () -> Unit,
     onRegisterClick: () -> Unit
 ) {

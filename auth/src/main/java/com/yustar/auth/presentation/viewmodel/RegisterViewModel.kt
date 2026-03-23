@@ -6,16 +6,21 @@ import com.yustar.auth.domain.model.RegisterUserParams
 import com.yustar.auth.domain.RegisterUserUseCase
 import com.yustar.auth.presentation.event.RegisterUiEvent
 import com.yustar.auth.presentation.state.RegisterUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Created by Yustar Pramudana on 07/03/26.
  */
 
-class RegisterViewModel(private val registerUserUseCase: RegisterUserUseCase) : ViewModel() {
+@HiltViewModel
+class RegisterViewModel @Inject constructor(
+    private val registerUserUseCase: RegisterUserUseCase
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState

@@ -6,8 +6,9 @@ import com.yustar.core.data.remote.model.ProfileRequest
 import com.yustar.core.data.remote.model.RegisterData
 import com.yustar.core.data.remote.model.Status
 import com.yustar.core.data.repository.UserRepository
+import javax.inject.Inject
 
-class RegisterUserUseCase(
+class RegisterUserUseCase @Inject constructor(
     private val repository: UserRepository
 ) {
 

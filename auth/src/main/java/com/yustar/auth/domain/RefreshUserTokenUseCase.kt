@@ -4,12 +4,13 @@ import com.yustar.core.data.remote.model.RefreshTokenRequest
 import com.yustar.core.data.remote.model.Status
 import com.yustar.core.data.repository.UserRepository
 import com.yustar.core.session.SessionManager
+import javax.inject.Inject
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
  */
 
-class RefreshUserTokenUseCase(
+class RefreshUserTokenUseCase @Inject constructor(
     private val repository: UserRepository,
     private val session: SessionManager
 ) {

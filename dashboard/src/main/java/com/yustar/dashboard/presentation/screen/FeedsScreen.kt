@@ -20,6 +20,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
 import androidx.paging.PagingData
@@ -34,14 +35,13 @@ import com.yustar.dashboard.presentation.state.FeedsUiState
 import com.yustar.dashboard.presentation.viewmodel.FeedsViewModel
 import com.yustar.dashboard.presentation.widget.PostWidget
 import kotlinx.coroutines.flow.flowOf
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * Created by Yustar Pramudana on 21/03/26.
  */
 
 @Composable
-fun FeedsScreen(innerPadding: PaddingValues, viewModel: FeedsViewModel = koinViewModel()) {
+fun FeedsScreen(innerPadding: PaddingValues, viewModel: FeedsViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val posts = viewModel.feeds.collectAsLazyPagingItems()
     val context = LocalContext.current

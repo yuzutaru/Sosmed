@@ -33,6 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yustar.auth.R
 import com.yustar.auth.presentation.event.RegisterUiEvent
@@ -41,7 +42,6 @@ import com.yustar.auth.presentation.viewmodel.RegisterViewModel
 import com.yustar.core.ui.theme.Red60
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.core.ui.widget.TextInput
-import org.koin.androidx.compose.koinViewModel
 
 /**
  * Created by Yustar Pramudana on 07/03/26.
@@ -49,7 +49,7 @@ import org.koin.androidx.compose.koinViewModel
 
 @Composable
 fun RegisterScreen(
-    viewModel: RegisterViewModel = koinViewModel(),
+    viewModel: RegisterViewModel = hiltViewModel(),
     onRegisterSuccess: () -> Unit
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()

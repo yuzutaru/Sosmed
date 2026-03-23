@@ -4,12 +4,13 @@ import com.yustar.core.data.remote.model.LoginRequest
 import com.yustar.core.data.remote.model.Status
 import com.yustar.core.data.repository.UserRepository
 import com.yustar.core.session.SessionManager
+import javax.inject.Inject
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
  */
 
-open class LoginUserUseCase(
+open class LoginUserUseCase @Inject constructor(
     private val repository: UserRepository,
     private val session: SessionManager
 ) {

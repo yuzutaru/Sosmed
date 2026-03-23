@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.hilt)
 }
 
 android {
@@ -67,16 +68,16 @@ dependencies {
 
     implementation(project(":core"))
 
+    // Hilt
+    implementation(libs.hilt.android)
+    ksp(libs.hilt.compiler)
+    implementation(libs.androidx.hilt.navigation.compose)
+
     // DataStore
     implementation(libs.androidx.datastore.preferences)
 
     // Security Crypto
     implementation(libs.androidx.security.crypto)
-
-    // Koin
-    implementation(libs.io.insert.koin.android)
-    implementation(libs.io.insert.koin.androidx.compose)
-    testImplementation(libs.io.insert.koin.test)
 
     // Room
     implementation(libs.androidx.room.runtime)

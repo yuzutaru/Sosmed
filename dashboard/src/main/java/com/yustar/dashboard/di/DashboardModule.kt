@@ -1,39 +1,53 @@
 package com.yustar.dashboard.di
 
+import android.content.Context
 import androidx.room.Room
+import com.yustar.core.data.remote.UsersApi
+import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.domain.repository.FeedsRepository
 import com.yustar.dashboard.domain.repository.FeedsRepositoryImpl
-import com.yustar.dashboard.domain.usecase.GetFeedsUseCase
-import com.yustar.dashboard.presentation.viewmodel.FeedsViewModel
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.dsl.module
+import dagger.Module
+import dagger.Provides
+import dagger.hilt.InstallIn
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
+import javax.inject.Singleton
 
 /**
  * Created by Yustar Pramudana on 22/03/26.
  */
 
-val dashboardModule = module {
-    // Database
-    single {
-        Room.databaseBuilder(
-            get(),
+@Module
+@InstallIn(SingletonComponent::class)
+object DashboardModule {
+
+    @Provides
+    @Singleton
+    fun provideFeedsDatabase(@ApplicationContext context: Context): FeedsDatabase {
+        return Room.databaseBuilder(
+            context,
             FeedsDatabase::class.java,
             "feeds.db"
         ).build()
     }
 
-    // API
-    single<FeedsApi> { get<Retrofit>().create(FeedsApi::class.java) }
+    @Provides
+    @Singleton
+    fun provideFeedsApi(retrofit: Retrofit): FeedsApi {
+        return retrofit.create(FeedsApi::class.java)
+    }
 
-    // Repository
-    single<FeedsRepository> { FeedsRepositoryImpl(get(), get(), get(), get()) }
-
-    // UseCases
-    factory { GetFeedsUseCase(get()) }
-
-    // ViewModel
-    viewModel { FeedsViewModel(get()) }
+    @Provides
+    @Singleton
+    fun provideFeedsRepository(
+        api: FeedsApi,
+        usersApi: UsersApi,
+        database: FeedsDatabase,
+        sessionManager: SessionManager
+    ): FeedsRepository {
+        return FeedsRepositoryImpl(api, usersApi, database, sessionManager)
+    }
 }

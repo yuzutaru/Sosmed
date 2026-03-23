@@ -6,16 +6,21 @@ import com.yustar.auth.domain.LoginResult
 import com.yustar.auth.domain.LoginUserUseCase
 import com.yustar.auth.presentation.event.LoginUiEvent
 import com.yustar.auth.presentation.state.LoginUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * Created by Yustar Pramudana on 06/03/26.
  */
 
-class LoginViewModel(private val loginUseCase: LoginUserUseCase): ViewModel() {
+@HiltViewModel
+class LoginViewModel @Inject constructor(
+    private val loginUseCase: LoginUserUseCase
+) : ViewModel() {
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState
 

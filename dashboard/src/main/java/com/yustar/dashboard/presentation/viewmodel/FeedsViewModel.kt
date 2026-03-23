@@ -7,16 +7,19 @@ import androidx.paging.cachedIn
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.usecase.GetFeedsUseCase
 import com.yustar.dashboard.presentation.state.FeedsUiState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import javax.inject.Inject
 
 /**
  * Created by Yustar Pramudana on 22/03/26.
  */
 
-class FeedsViewModel(
+@HiltViewModel
+class FeedsViewModel @Inject constructor(
     getFeedsUseCase: GetFeedsUseCase
 ) : ViewModel() {
 
