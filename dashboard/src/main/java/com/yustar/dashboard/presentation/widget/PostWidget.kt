@@ -211,7 +211,7 @@ private fun PostMediaSection(mediaList: List<PostMedia>) {
                         modifier = Modifier.fillMaxSize()
                     )
                     // Mute icon for video
-                    Icon(
+                    /*Icon(
                         imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
                         contentDescription = "Mute",
                         modifier = Modifier
@@ -221,7 +221,7 @@ private fun PostMediaSection(mediaList: List<PostMedia>) {
                             .background(Color.Black.copy(alpha = 0.6f), CircleShape)
                             .padding(4.dp),
                         tint = Color.White
-                    )
+                    )*/
                 } else {
                     AsyncImage(
                         model = media.url,
