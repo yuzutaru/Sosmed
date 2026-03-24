@@ -13,21 +13,17 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.automirrored.outlined.VolumeOff
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.filled.MusicNote
-import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.outlined.ChatBubbleOutline
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Feedback
-import androidx.compose.material.icons.outlined.HighlightOff
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Repeat
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -81,7 +77,7 @@ fun PostWidget(
         )
 
         // Media
-        PostMedia(url = post.postMedia.firstOrNull()?.url)
+        PostMediaSection(post.postMedia)
 
         // Action Buttons
         PostActions(
@@ -92,6 +88,25 @@ fun PostWidget(
 
         // Liked by section
         PostLikedBy(likedBy = likedBy)
+
+        // Content
+        if (!post.content.isNullOrBlank()) {
+            Text(
+                text = post.content,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
+
+        // Timestamp
+        if (post.createdAt.isNotBlank()) {
+            Text(
+                text = post.createdAt,
+                modifier = Modifier.padding(horizontal = 12.dp, vertical = 2.dp),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+            )
+        }
     }
 }
 
@@ -148,30 +163,8 @@ private fun PostHeader(
                     )
                 )
                 Spacer(modifier = Modifier.width(4.dp))
-                // Verified icon
-                /*Icon(
-                    imageVector = Icons.Default.Verified,
-                    contentDescription = "Verified",
-                    modifier = Modifier.size(14.dp),
-                    tint = Color(0xFF1DA1F2)
-                )*/
             }
         }
-
-        // Music Icon and Text
-        /*Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                imageVector = Icons.Default.MusicNote,
-                contentDescription = "Music",
-                modifier = Modifier.size(12.dp)
-            )
-            Spacer(modifier = Modifier.width(4.dp))
-            Text(
-                text = musicName,
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.7f)
-            )
-        }*/
 
         Box {
             IconButton(onClick = { showMenu = true }) {
@@ -187,32 +180,75 @@ private fun PostHeader(
 }
 
 @Composable
-private fun PostMedia(url: String?) {
+private fun PostMediaSection(mediaList: List<PostMedia>) {
+    if (mediaList.isEmpty()) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(1f)
+                .background(Color.LightGray)
+        )
+        return
+    }
+
+    val pagerState = rememberPagerState(pageCount = { mediaList.size })
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(1f)
             .background(Color.LightGray)
     ) {
-        AsyncImage(
-            model = url,
-            contentDescription = "Post Media",
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier.fillMaxSize()
+        ) { page ->
+            val media = mediaList[page]
+            Box(modifier = Modifier.fillMaxSize()) {
+                if (media.mediaType == "video") {
+                    VideoPlayer(
+                        url = media.url,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                    // Mute icon for video
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
+                        contentDescription = "Mute",
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                            .size(20.dp)
+                            .background(Color.Black.copy(alpha = 0.6f), CircleShape)
+                            .padding(4.dp),
+                        tint = Color.White
+                    )
+                } else {
+                    AsyncImage(
+                        model = media.url,
+                        contentDescription = "Post Media",
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop
+                    )
+                }
+            }
+        }
 
-        // Mute icon as seen in the screenshot
-        Icon(
-            imageVector = Icons.AutoMirrored.Outlined.VolumeOff,
-            contentDescription = "Mute",
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(12.dp)
-                .size(20.dp)
-                .background(Color.Black.copy(alpha = 0.6f), CircleShape)
-                .padding(4.dp),
-            tint = Color.White
-        )
+        if (mediaList.size > 1) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(12.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .padding(horizontal = 8.dp, vertical = 4.dp)
+            ) {
+                Text(
+                    text = "${pagerState.currentPage + 1}/${mediaList.size}",
+                    color = Color.White,
+                    style = MaterialTheme.typography.labelSmall
+                )
+            }
+        }
     }
 }
 
@@ -305,10 +341,13 @@ fun NightModePostWidgetPreview() {
         PostWidget(
             post = Post(
                 id = "1",
-                createdAt = "",
-                content = "Sample content",
+                createdAt = "2 hours ago",
+                content = "This is a sample post content that might be long enough to wrap into multiple lines if needed.",
                 userId = "1",
-                postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image")),
+                postMedia = listOf(
+                    PostMedia("1", "1", "https://picsum.photos/400", "image"),
+                    PostMedia("2", "1", "https://picsum.photos/401", "image")
+                ),
                 postProfile = PostProfile("John", "Doe")
             )
         )
@@ -322,11 +361,11 @@ fun LightModePreviewPostWidgetScreen() {
         PostWidget(
             post = Post(
                 id = "1",
-                createdAt = "",
-                content = "Sample content",
+                createdAt = "Just now",
+                content = "Testing content with single media",
                 userId = "1",
                 postMedia = listOf(PostMedia("1", "1", "https://picsum.photos/400", "image")),
-                postProfile = PostProfile("John", "Doe")
+                postProfile = PostProfile("Jane", "Smith")
             )
         )
     }

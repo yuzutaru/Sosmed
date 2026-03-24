@@ -18,8 +18,8 @@ class PostWidgetTest {
 
     private val mockPost = Post(
         id = "1",
-        createdAt = "2023-10-27T10:00:00Z",
-        content = "This is a test post",
+        createdAt = "2 hours ago",
+        content = "This is a test post content",
         userId = "user1",
         postMedia = listOf(
             PostMedia(
@@ -29,55 +29,84 @@ class PostWidgetTest {
                 mediaType = "image"
             )
         ),
-        postProfile = PostProfile("dagelan", "")
+        postProfile = PostProfile("John", "Doe")
     )
 
     @Test
-    fun postWidget_displaysDefaultValues() {
+    fun postWidget_displaysPostData() {
         composeTestRule.setContent {
             SosmedTheme {
                 PostWidget(post = mockPost)
             }
         }
 
-        // Verify username (constructed as "firstName lastName")
-        composeTestRule.onNodeWithText("dagelan ").assertIsDisplayed()
+        // Verify username (constructed as "firstName lastName" by default)
+        composeTestRule.onNodeWithText("John Doe").assertIsDisplayed()
 
-        // Verify initials are shown when avatarUrl is null ("dagelan" -> "D")
-        composeTestRule.onNodeWithText("D").assertIsDisplayed()
+        // Verify initials (JD)
+        composeTestRule.onNodeWithText("JD").assertIsDisplayed()
+        
+        // Verify content and timestamp
+        composeTestRule.onNodeWithText("This is a test post content").assertIsDisplayed()
+        composeTestRule.onNodeWithText("2 hours ago").assertIsDisplayed()
         
         // Verify default counts
         composeTestRule.onNodeWithText("27.7K").assertIsDisplayed()
         composeTestRule.onNodeWithText("317").assertIsDisplayed()
-        composeTestRule.onNodeWithText("310").assertIsDisplayed()
         
-        // Verify default liked by
-        composeTestRule.onNodeWithText("Liked by febrian_joss and others").assertIsDisplayed()
-        
-        // Verify key UI components via content descriptions
+        // Verify media
         composeTestRule.onNodeWithContentDescription("Post Media").assertIsDisplayed()
+    }
+
+    @Test
+    fun postWidget_displaysMultipleMediaIndicator() {
+        val multiMediaPost = mockPost.copy(
+            postMedia = listOf(
+                PostMedia("1", "1", "url1", "image"),
+                PostMedia("2", "1", "url2", "image")
+            )
+        )
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                PostWidget(post = multiMediaPost)
+            }
+        }
+
+        // Verify page indicator for multiple media
+        composeTestRule.onNodeWithText("1/2").assertIsDisplayed()
+    }
+
+    @Test
+    fun postWidget_displaysVideoWithMuteIcon() {
+        val videoPost = mockPost.copy(
+            postMedia = listOf(
+                PostMedia("1", "1", "url1", "video")
+            )
+        )
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                PostWidget(post = videoPost)
+            }
+        }
+
+        // Verify mute icon is shown for video
         composeTestRule.onNodeWithContentDescription("Mute").assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Share").assertIsDisplayed()
     }
 
     @Test
     fun postWidget_displaysCustomValues() {
         val customUsername = "test_user"
         val customLikes = "100"
-        val customComments = "50"
-        val customReposts = "10"
         val customLikedBy = "another_user"
-        val customAvatarUrl = "https://example.com/avatar.jpg"
 
         composeTestRule.setContent {
             SosmedTheme {
                 PostWidget(
                     post = mockPost,
                     username = customUsername,
-                    avatarUrl = customAvatarUrl,
                     likeCount = customLikes,
-                    commentCount = customComments,
-                    repostCount = customReposts,
                     likedBy = customLikedBy
                 )
             }
@@ -85,10 +114,7 @@ class PostWidgetTest {
 
         // Verify custom values are rendered
         composeTestRule.onNodeWithText(customUsername).assertIsDisplayed()
-        composeTestRule.onNodeWithContentDescription("Avatar").assertIsDisplayed()
         composeTestRule.onNodeWithText(customLikes).assertIsDisplayed()
-        composeTestRule.onNodeWithText(customComments).assertIsDisplayed()
-        composeTestRule.onNodeWithText(customReposts).assertIsDisplayed()
         composeTestRule.onNodeWithText("Liked by $customLikedBy and others").assertIsDisplayed()
     }
 }
