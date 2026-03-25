@@ -1,17 +1,29 @@
 package com.yustar.dashboard.domain.repository
 
+import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.Context
+import android.database.Cursor
+import android.net.Uri
+import android.provider.MediaStore
 import com.yustar.core.data.remote.UsersApi
 import com.yustar.core.data.remote.model.RefreshTokenResponse
 import com.yustar.core.data.remote.model.RefreshTokenUser
+import com.yustar.core.data.remote.model.Resource
 import com.yustar.core.data.remote.model.Status
 import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.domain.model.PostMedia
+import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
 import io.mockk.every
+import io.mockk.just
 import io.mockk.mockk
+import io.mockk.mockkStatic
+import io.mockk.unmockkStatic
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
@@ -21,6 +33,7 @@ import retrofit2.Response
 
 class FeedsRepositoryImplTest {
 
+    private lateinit var context: Context
     private lateinit var api: FeedsApi
     private lateinit var usersApi: UsersApi
     private lateinit var database: FeedsDatabase
@@ -29,11 +42,12 @@ class FeedsRepositoryImplTest {
 
     @Before
     fun setUp() {
+        context = mockk()
         api = mockk()
         usersApi = mockk()
         database = mockk()
         sessionManager = mockk(relaxed = true)
-        repository = FeedsRepositoryImpl(api, usersApi, database, sessionManager)
+        repository = FeedsRepositoryImpl(context, api, usersApi, database, sessionManager)
     }
 
     @Test
@@ -125,5 +139,43 @@ class FeedsRepositoryImplTest {
         // Then
         assertEquals(Status.ERROR, result.status)
         assertEquals(errorMessage, result.message)
+    }
+
+    @Test
+    fun `getLocalImages returns list of images from media store`() = runTest {
+        // Given
+        val contentResolver = mockk<ContentResolver>()
+        val cursor = mockk<Cursor>()
+        val uri = mockk<Uri>()
+        
+        every { context.contentResolver } returns contentResolver
+        every { 
+            contentResolver.query(any(), any(), any(), any(), any()) 
+        } returns cursor
+        
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID) } returns 0
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME) } returns 1
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED) } returns 2
+        
+        every { cursor.moveToNext() } returnsMany listOf(true, false)
+        every { cursor.getLong(0) } returns 1L
+        every { cursor.getString(1) } returns "image.jpg"
+        every { cursor.getLong(2) } returns 123456L
+        every { cursor.close() } just Runs
+        
+        mockkStatic(ContentUris::class)
+        every { ContentUris.withAppendedId(any(), any()) } returns uri
+
+        // When
+        val result = repository.getLocalImages().first()
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals(1L, result[0].id)
+        assertEquals("image.jpg", result[0].name)
+        assertEquals(123456L, result[0].dateAdded)
+        assertEquals(uri, result[0].uri)
+        
+        unmockkStatic(ContentUris::class)
     }
 }

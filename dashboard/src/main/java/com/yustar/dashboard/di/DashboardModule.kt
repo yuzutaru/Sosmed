@@ -43,11 +43,12 @@ object DashboardModule {
     @Provides
     @Singleton
     fun provideFeedsRepository(
+        @ApplicationContext context: Context,
         api: FeedsApi,
         usersApi: UsersApi,
         database: FeedsDatabase,
         sessionManager: SessionManager
     ): FeedsRepository {
-        return FeedsRepositoryImpl(api, usersApi, database, sessionManager)
+        return FeedsRepositoryImpl(context, api, usersApi, database, sessionManager)
     }
 }

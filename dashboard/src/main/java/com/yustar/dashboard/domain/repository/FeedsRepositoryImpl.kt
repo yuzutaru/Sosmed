@@ -1,5 +1,8 @@
 package com.yustar.dashboard.domain.repository
 
+import android.content.ContentUris
+import android.content.Context
+import android.provider.MediaStore
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -14,13 +17,16 @@ import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.data.remote.model.CreatePostMediaDto
 import com.yustar.dashboard.data.remote.model.CreatePostRequestDto
 import com.yustar.dashboard.data.repository.FeedsRemoteMediator
+import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
 import com.yustar.dashboard.domain.model.PostProfile
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 
 class FeedsRepositoryImpl(
+    private val context: Context,
     private val api: FeedsApi,
     private val usersApi: UsersApi,
     private val database: FeedsDatabase,
@@ -120,5 +126,36 @@ class FeedsRepositoryImpl(
         } catch (e: Exception) {
             Resource.error(null, e.localizedMessage)
         }
+    }
+
+    override fun getLocalImages(): Flow<List<LocalMedia>> = flow {
+        val images = mutableListOf<LocalMedia>()
+        val projection = arrayOf(
+            MediaStore.Images.Media._ID,
+            MediaStore.Images.Media.DISPLAY_NAME,
+            MediaStore.Images.Media.DATE_ADDED
+        )
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+        context.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            null,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+
+            while (cursor.moveToNext()) {
+                val id = cursor.getLong(idColumn)
+                val name = cursor.getString(nameColumn)
+                val dateAdded = cursor.getLong(dateAddedColumn)
+                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                images.add(LocalMedia(id, uri, name, dateAdded))
+            }
+        }
+        emit(images)
     }
 }
