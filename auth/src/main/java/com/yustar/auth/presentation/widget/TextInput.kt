@@ -47,6 +47,7 @@ fun TextInput(
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
             style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
             text = label
         )
 

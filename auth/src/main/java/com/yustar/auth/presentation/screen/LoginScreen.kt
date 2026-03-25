@@ -96,6 +96,7 @@ fun LoginContent(
 
             Text(
                 style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onSurface,
                 textAlign = TextAlign.Center,
                 text = stringResource(R.string.login_to_your_account)
             )
@@ -160,6 +161,7 @@ fun LoginContent(
             ) {
                 Text(
                     style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
                     text = stringResource(R.string.dont_have_an_account)
                 )
 

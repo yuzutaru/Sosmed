@@ -12,6 +12,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.rememberNavController
 import com.yustar.auth.authGraph
 import com.yustar.core.session.SessionManager
+import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.menuGraph
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -31,10 +32,12 @@ class MainActivity : ComponentActivity() {
 
             val startRoute = if (loggedUser != null) "menu_route" else "login_route"
 
-            SosmedAppNavHost(
-                navController = navController,
-                startDestination = startRoute
-            )
+            SosmedTheme {
+                SosmedAppNavHost(
+                    navController = navController,
+                    startDestination = startRoute
+                )
+            }
         }
     }
 }
