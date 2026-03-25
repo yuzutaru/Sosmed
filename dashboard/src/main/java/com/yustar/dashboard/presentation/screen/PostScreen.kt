@@ -11,7 +11,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -45,6 +44,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,6 +53,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
@@ -63,8 +64,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yustar.core.ui.theme.SosmedTheme
+import com.yustar.dashboard.R
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.presentation.viewmodel.PostViewModel
+import com.yustar.dashboard.presentation.widget.SelectAlbumBottomSheetDialog
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -93,6 +96,8 @@ fun PostScreen(
         }
         if (!allGranted) {
             permissionLauncher.launch(permissions)
+        } else {
+            viewModel.loadLocalImages()
         }
     }
 
@@ -122,13 +127,25 @@ fun PostContent(
     onImageSelected: (LocalMedia) -> Unit,
     onTabSelected: (Int) -> Unit
 ) {
+    var showAlbumSelection by remember { mutableStateOf(false) }
+
+    if (showAlbumSelection) {
+        SelectAlbumBottomSheetDialog(
+            onDismissRequest = { showAlbumSelection = false },
+            onAlbumSelected = { album ->
+                // Handle album selection if needed
+                showAlbumSelection = false
+            }
+        )
+    }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Scaffold(
             topBar = {
                 TopAppBar(
                     title = {
                         Text(
-                            text = "New post",
+                            text = stringResource(R.string.new_post),
                             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     },
@@ -140,7 +157,8 @@ fun PostContent(
                     actions = {
                         TextButton(onClick = { /* Handle Next */ }) {
                             Text(
-                                text = "Next",
+                                text = stringResource(R.string.next),
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = Color(0xFF3897F0),
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
@@ -208,10 +226,10 @@ fun PostContent(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { /* Show folders */ }
+                            modifier = Modifier.clickable { showAlbumSelection = true }
                         ) {
                             Text(
-                                text = "Recents",
+                                text = stringResource(R.string.recents),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
@@ -230,7 +248,8 @@ fun PostContent(
                                         modifier = Modifier.size(16.dp)
                                     )
                                     Text(
-                                        text = "SELECT",
+                                        text = stringResource(R.string.select),
+                                        style = MaterialTheme.typography.bodyMedium,
                                         fontSize = 12.sp,
                                         fontWeight = FontWeight.Bold,
                                         modifier = Modifier.padding(start = 4.dp)
