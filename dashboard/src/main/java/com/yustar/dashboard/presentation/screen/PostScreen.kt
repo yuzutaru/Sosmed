@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.PhotoCamera
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -67,6 +68,7 @@ import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.R
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.presentation.event.PostUiEvent
 import com.yustar.dashboard.presentation.state.PostUiState
 import com.yustar.dashboard.presentation.viewmodel.PostViewModel
@@ -80,7 +82,10 @@ fun PostScreen(
 ) {
     val context = LocalContext.current
     val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        arrayOf(Manifest.permission.READ_MEDIA_IMAGES)
+        arrayOf(
+            Manifest.permission.READ_MEDIA_IMAGES,
+            Manifest.permission.READ_MEDIA_VIDEO
+        )
     } else {
         arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE)
     }
@@ -89,7 +94,7 @@ fun PostScreen(
         ActivityResultContracts.RequestMultiplePermissions()
     ) { result ->
         if (result.values.all { it }) {
-            viewModel.loadLocalImages()
+            viewModel.loadLocalImages(mediaType = MediaType.RECENTS)
         }
     }
 
@@ -100,7 +105,7 @@ fun PostScreen(
         if (!allGranted) {
             permissionLauncher.launch(permissions)
         } else {
-            viewModel.loadLocalImages()
+            viewModel.loadLocalImages(mediaType = MediaType.RECENTS)
         }
     }
 
@@ -152,6 +157,10 @@ fun PostContent(
         SelectAlbumBottomSheetDialog(
             onDismissRequest = { onShowAlbumSelection(false) },
             onAlbumSelected = onAlbumSelected,
+            onCategoryClicked = {
+                mediaType -> viewModel.loadLocalImages(mediaType = mediaType)
+                viewModel.onEvent(PostUiEvent.ShowAlbumSelection(false))
+            },
             viewModel = viewModel
         )
     }
@@ -219,6 +228,19 @@ fun PostContent(
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
                             )
+
+                            if (media.isVideo) {
+                                Icon(
+                                    imageVector = Icons.Default.PlayArrow,
+                                    contentDescription = null,
+                                    tint = Color.White,
+                                    modifier = Modifier
+                                        .size(48.dp)
+                                        .align(Alignment.Center)
+                                        .background(Color.Black.copy(alpha = 0.3f), CircleShape)
+                                        .padding(8.dp)
+                                )
+                            }
                         }
 
                         Box(
@@ -317,6 +339,19 @@ fun PostContent(
                             modifier = Modifier.fillMaxSize(),
                             contentScale = ContentScale.Crop
                         )
+
+                        if (media.isVideo) {
+                            Text(
+                                text = media.duration ?: "",
+                                color = Color.White,
+                                style = MaterialTheme.typography.labelSmall,
+                                modifier = Modifier
+                                    .align(Alignment.BottomEnd)
+                                    .padding(4.dp)
+                                    .background(Color.Black.copy(alpha = 0.5f), RoundedCornerShape(2.dp))
+                                    .padding(horizontal = 4.dp, vertical = 2.dp)
+                            )
+                        }
 
                         if (selectedImage == media) {
                             Box(

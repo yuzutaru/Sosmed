@@ -3,11 +3,13 @@ package com.yustar.dashboard.presentation.viewmodel
 import android.net.Uri
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.usecase.GetLocalAlbumsUseCase
 import com.yustar.dashboard.domain.usecase.GetLocalImagesUseCase
 import com.yustar.dashboard.presentation.event.PostUiEvent
 import io.mockk.every
 import io.mockk.mockk
+import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -42,7 +44,7 @@ class PostViewModelTest {
     @Before
     fun setUp() {
         Dispatchers.setMain(testDispatcher)
-        every { getLocalImagesUseCase(any()) } returns flowOf(localImages)
+        every { getLocalImagesUseCase(any(), any()) } returns flowOf(localImages)
         every { getLocalAlbumsUseCase() } returns flowOf(albums)
         viewModel = PostViewModel(getLocalImagesUseCase, getLocalAlbumsUseCase)
     }
@@ -70,18 +72,20 @@ class PostViewModelTest {
     }
 
     @Test
-    fun `loadLocalImages should update localImages and selectedImage if null`() = runTest {
+    fun `loadLocalImages should update localImages, mediaType and selectedImage if null`() = runTest {
         // Initial load happens in init, selectedImage is set to localImages.first()
         advanceUntilIdle()
         assertEquals(localImages.first(), viewModel.uiState.value.selectedImage)
+        assertEquals(MediaType.PHOTOS, viewModel.uiState.value.mediaType)
 
         val newImages = listOf(LocalMedia(id = 3L, uri = mockUri, name = "image3.jpg", dateAdded = 3000L))
-        every { getLocalImagesUseCase(any()) } returns flowOf(newImages)
+        every { getLocalImagesUseCase("bucketId", MediaType.VIDEOS) } returns flowOf(newImages)
 
-        viewModel.loadLocalImages("bucketId")
+        viewModel.loadLocalImages("bucketId", MediaType.VIDEOS)
         advanceUntilIdle()
 
         assertEquals(newImages, viewModel.uiState.value.localImages)
+        assertEquals(MediaType.VIDEOS, viewModel.uiState.value.mediaType)
         // selectedImage should still be the first one from init because it was not null
         assertEquals(localImages.first(), viewModel.uiState.value.selectedImage)
     }
@@ -96,10 +100,17 @@ class PostViewModelTest {
     }
 
     @Test
-    fun `onEvent OnAlbumSelected should update selectedAlbum`() = runTest {
+    fun `onEvent OnAlbumSelected should update selectedAlbum and load images`() = runTest {
         val album = albums[1]
+        val newImages = listOf(LocalMedia(id = 3L, uri = mockUri, name = "image3.jpg", dateAdded = 3000L))
+        every { getLocalImagesUseCase(album.id, any()) } returns flowOf(newImages)
+
         viewModel.onEvent(PostUiEvent.OnAlbumSelected(album))
+        advanceUntilIdle()
+
         assertEquals(album, viewModel.uiState.value.selectedAlbum)
+        assertEquals(newImages, viewModel.uiState.value.localImages)
+        verify { getLocalImagesUseCase(album.id, any()) }
     }
 
     @Test

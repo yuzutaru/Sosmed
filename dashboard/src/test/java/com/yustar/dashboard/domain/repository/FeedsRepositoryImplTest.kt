@@ -15,6 +15,7 @@ import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.dao.PostDao
 import com.yustar.dashboard.data.remote.FeedsApi
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.model.PostMedia
 import io.mockk.Runs
 import io.mockk.coEvery
@@ -120,7 +121,7 @@ class FeedsRepositoryImplTest {
 
         // Refresh token succeeds
         coEvery { 
-            usersApi.refreshToken(grantType = any(), refreshTokenRequest = any(), apiKey = any()) 
+            usersApi.refreshToken(refreshTokenRequest = any()) 
         } returns RefreshTokenResponse(
             accessToken = newToken,
             refreshToken = "new_refresh_token",
@@ -165,27 +166,33 @@ class FeedsRepositoryImplTest {
         val contentResolver = mockk<ContentResolver>()
         val cursor = mockk<Cursor>()
         val uri = mockk<Uri>()
+        val externalUri = mockk<Uri>()
         
+        mockkStatic(MediaStore.Files::class)
+        every { MediaStore.Files.getContentUri("external") } returns externalUri
+
         every { context.contentResolver } returns contentResolver
         every { 
             contentResolver.query(any(), any(), any(), any(), any()) 
         } returns cursor
         
-        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID) } returns 0
-        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME) } returns 1
-        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED) } returns 2
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID) } returns 0
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME) } returns 1
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED) } returns 2
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE) } returns 3
         
         every { cursor.moveToNext() } returnsMany listOf(true, false)
         every { cursor.getLong(0) } returns 1L
         every { cursor.getString(1) } returns "image.jpg"
         every { cursor.getLong(2) } returns 123456L
+        every { cursor.getInt(3) } returns MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
         every { cursor.close() } just Runs
         
         mockkStatic(ContentUris::class)
         every { ContentUris.withAppendedId(any(), any()) } returns uri
 
         // When
-        val result = repository.getLocalImages().first()
+        val result = repository.getLocalImages(type = MediaType.PHOTOS).first()
 
         // Then
         assertEquals(1, result.size)
@@ -195,6 +202,7 @@ class FeedsRepositoryImplTest {
         assertEquals(uri, result[0].uri)
         
         unmockkStatic(ContentUris::class)
+        unmockkStatic(MediaStore.Files::class)
     }
 
     @Test
@@ -203,13 +211,17 @@ class FeedsRepositoryImplTest {
         val contentResolver = mockk<ContentResolver>()
         val cursor = mockk<Cursor>()
         val bucketId = "bucket123"
+        val externalUri = mockk<Uri>()
+
+        mockkStatic(MediaStore.Files::class)
+        every { MediaStore.Files.getContentUri("external") } returns externalUri
         
         every { context.contentResolver } returns contentResolver
         every { 
             contentResolver.query(
                 any(), any(), 
-                "${MediaStore.Images.Media.BUCKET_ID} = ?", 
-                arrayOf(bucketId), 
+                any(), 
+                any(), 
                 any()
             ) 
         } returns cursor
@@ -219,18 +231,19 @@ class FeedsRepositoryImplTest {
         every { cursor.close() } just Runs
 
         // When
-        repository.getLocalImages(bucketId).first()
+        repository.getLocalImages(bucketId, MediaType.PHOTOS).first()
 
         // Then
         verify { 
             contentResolver.query(
-                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                externalUri,
                 any(),
-                "${MediaStore.Images.Media.BUCKET_ID} = ?",
-                arrayOf(bucketId),
+                "${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? AND ${MediaStore.Images.Media.BUCKET_ID} = ?",
+                arrayOf(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString(), bucketId),
                 any()
             ) 
         }
+        unmockkStatic(MediaStore.Files::class)
     }
 
     @Test

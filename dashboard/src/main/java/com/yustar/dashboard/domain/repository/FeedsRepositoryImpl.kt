@@ -3,6 +3,7 @@ package com.yustar.dashboard.domain.repository
 import android.content.ContentUris
 import android.content.Context
 import android.provider.MediaStore
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
@@ -19,6 +20,7 @@ import com.yustar.dashboard.data.remote.model.CreatePostRequestDto
 import com.yustar.dashboard.data.repository.FeedsRemoteMediator
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
 import com.yustar.dashboard.domain.model.PostProfile
@@ -129,37 +131,94 @@ class FeedsRepositoryImpl(
         }
     }
 
-    override fun getLocalImages(bucketId: String?): Flow<List<LocalMedia>> = flow {
-        val images = mutableListOf<LocalMedia>()
+    @OptIn(ExperimentalFoundationApi::class)
+    override fun getLocalImages(
+        bucketId: String?,
+        type: MediaType
+    ): Flow<List<LocalMedia>> = flow {
+        val mediaList = mutableListOf<LocalMedia>()
+
+        // Use MediaStore.Files to support both Images and Videos
+        val contentUri = MediaStore.Files.getContentUri("external")
+
         val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_ADDED
+            MediaStore.Files.FileColumns._ID,
+            MediaStore.Files.FileColumns.DISPLAY_NAME,
+            MediaStore.Files.FileColumns.DATE_ADDED,
+            MediaStore.Files.FileColumns.MEDIA_TYPE,
+            MediaStore.Files.FileColumns.MIME_TYPE,
+            MediaStore.Video.VideoColumns.DURATION
         )
-        val selection = if (bucketId != null) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
-        val selectionArgs = if (bucketId != null) arrayOf(bucketId) else null
-        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+        // Build Selection String
+        val selectionQueries = mutableListOf<String>()
+        val selectionArgs = mutableListOf<String>()
+
+        // 1. Filter by Media Type
+        when (type) {
+            MediaType.PHOTOS -> {
+                selectionQueries.add("${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?")
+                selectionArgs.add(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString())
+            }
+            MediaType.VIDEOS -> {
+                selectionQueries.add("${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?")
+                selectionArgs.add(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString())
+            }
+            MediaType.RECENTS -> {
+                selectionQueries.add("(${MediaStore.Files.FileColumns.MEDIA_TYPE} = ? OR ${MediaStore.Files.FileColumns.MEDIA_TYPE} = ?)")
+                selectionArgs.add(MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE.toString())
+                selectionArgs.add(MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO.toString())
+            }
+        }
+
+        // 2. Filter by Bucket (Album) if provided
+        if (bucketId != null) {
+            selectionQueries.add("${MediaStore.Images.Media.BUCKET_ID} = ?")
+            selectionArgs.add(bucketId)
+        }
+
+        val selection = selectionQueries.joinToString(" AND ")
+        val sortOrder = "${MediaStore.Files.FileColumns.DATE_ADDED} DESC"
 
         context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            contentUri,
             projection,
             selection,
-            selectionArgs,
+            selectionArgs.toTypedArray(),
             sortOrder
         )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID)
+            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME)
+            val dateAddedColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED)
+            val mediaTypeColumn = cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE)
+            val durationColumn = cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION)
 
             while (cursor.moveToNext()) {
                 val id = cursor.getLong(idColumn)
                 val name = cursor.getString(nameColumn)
                 val dateAdded = cursor.getLong(dateAddedColumn)
-                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
-                images.add(LocalMedia(id, uri, name, dateAdded))
+                val mediaType = cursor.getInt(mediaTypeColumn)
+                val durationMs = cursor.getLong(durationColumn)
+
+                val isVideo = mediaType == MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+
+                // Determine correct URI based on type
+                val uri = if (isVideo) {
+                    ContentUris.withAppendedId(MediaStore.Video.Media.EXTERNAL_CONTENT_URI, id)
+                } else {
+                    ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id)
+                }
+
+                val duration = if (isVideo) {
+                    val minutes = (durationMs / 1000) / 60
+                    val seconds = (durationMs / 1000) % 60
+                    String.format("%d:%02d", minutes, seconds)
+                } else null
+
+                mediaList.add(LocalMedia(id, uri, name, dateAdded, isVideo, duration))
             }
         }
-        emit(images)
+        emit(mediaList)
     }
 
     override fun getLocalAlbums(): Flow<List<AlbumItem>> = flow {

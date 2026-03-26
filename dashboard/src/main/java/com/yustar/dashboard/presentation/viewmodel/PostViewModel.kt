@@ -2,6 +2,7 @@ package com.yustar.dashboard.presentation.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.usecase.GetLocalAlbumsUseCase
 import com.yustar.dashboard.domain.usecase.GetLocalImagesUseCase
 import com.yustar.dashboard.presentation.event.PostUiEvent
@@ -28,12 +29,13 @@ class PostViewModel @Inject constructor(
     }
 
     fun setTabs(tabs: List<String>) {
-        _uiState.value = _uiState.value.copy(tabs = tabs)
+        _uiState.update { it.copy(tabs = tabs) }
     }
 
-    fun loadLocalImages(bucketId: String? = null) {
+    fun loadLocalImages(bucketId: String? = null, mediaType: MediaType = MediaType.PHOTOS) {
+        _uiState.update { it.copy(mediaType = mediaType) }
         viewModelScope.launch {
-            getLocalImagesUseCase(bucketId).collect { images ->
+            getLocalImagesUseCase(bucketId, mediaType).collect { images ->
                 _uiState.update { it.copy(localImages = images) }
                 if (images.isNotEmpty() && _uiState.value.selectedImage == null) {
                     _uiState.update { it.copy(selectedImage = images.first()) }
@@ -53,7 +55,10 @@ class PostViewModel @Inject constructor(
     fun onEvent(event: PostUiEvent) {
         when (event) {
             is PostUiEvent.ShowAlbumSelection -> _uiState.update { it.copy(showAlbumSelection = event.show) }
-            is PostUiEvent.OnAlbumSelected -> _uiState.update { it.copy(selectedAlbum = event.album) }
+            is PostUiEvent.OnAlbumSelected -> {
+                _uiState.update { it.copy(selectedAlbum = event.album) }
+                loadLocalImages(event.album.id, _uiState.value.mediaType)
+            }
             is PostUiEvent.OnImageSelected -> _uiState.update { it.copy(selectedImage = event.image) }
             is PostUiEvent.OnTabSelected -> _uiState.update { it.copy(selectedTab = event.tab) }
         }

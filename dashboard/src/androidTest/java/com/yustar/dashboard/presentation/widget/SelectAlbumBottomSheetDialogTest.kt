@@ -4,12 +4,14 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.platform.app.InstrumentationRegistry
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.R
 import com.yustar.dashboard.domain.model.AlbumItem
+import com.yustar.dashboard.domain.model.MediaType
 import io.mockk.mockk
 import io.mockk.verify
 import org.junit.Rule
@@ -30,7 +32,8 @@ class SelectAlbumBottomSheetDialogTest {
                 SelectAlbumBottomSheetDialogContent(
                     onDismissRequest = {},
                     onAlbumSelected = {},
-                    sheetState = rememberModalBottomSheetState(),
+                    onCategoryClicked = {},
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     albums = emptyList()
                 )
             }
@@ -38,9 +41,9 @@ class SelectAlbumBottomSheetDialogTest {
 
         composeTestRule.onNodeWithText(context.getString(R.string.select_album)).assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.cancel)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(context.getString(R.string.recents)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(context.getString(R.string.photos)).assertIsDisplayed()
-        composeTestRule.onNodeWithText(context.getString(R.string.videos)).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.recents)}").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.photos)}").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.videos)}").assertIsDisplayed()
         composeTestRule.onNodeWithText(context.getString(R.string.albums)).assertIsDisplayed()
     }
 
@@ -56,16 +59,39 @@ class SelectAlbumBottomSheetDialogTest {
                 SelectAlbumBottomSheetDialogContent(
                     onDismissRequest = {},
                     onAlbumSelected = {},
-                    sheetState = rememberModalBottomSheetState(),
+                    onCategoryClicked = {},
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     albums = albums
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Vacation").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("AlbumItem_Vacation").assertIsDisplayed()
         composeTestRule.onNodeWithText("10").assertIsDisplayed()
-        composeTestRule.onNodeWithText("Food").assertIsDisplayed()
+        composeTestRule.onNodeWithTag("AlbumItem_Food").assertIsDisplayed()
         composeTestRule.onNodeWithText("5").assertIsDisplayed()
+    }
+
+    @Test
+    fun selectAlbumBottomSheetDialogContent_displaysVideoAlbumWithDuration() {
+        val albums = listOf(
+            AlbumItem("1", "Videos", "10", null, isVideo = true, duration = "05:30")
+        )
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                SelectAlbumBottomSheetDialogContent(
+                    onDismissRequest = {},
+                    onAlbumSelected = {},
+                    onCategoryClicked = {},
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    albums = albums
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("AlbumItem_Videos").assertIsDisplayed()
+        composeTestRule.onNodeWithText("05:30").assertIsDisplayed()
     }
 
     @Test
@@ -77,7 +103,8 @@ class SelectAlbumBottomSheetDialogTest {
                 SelectAlbumBottomSheetDialogContent(
                     onDismissRequest = onDismissRequest,
                     onAlbumSelected = {},
-                    sheetState = rememberModalBottomSheetState(),
+                    onCategoryClicked = {},
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     albums = emptyList()
                 )
             }
@@ -89,27 +116,66 @@ class SelectAlbumBottomSheetDialogTest {
     }
 
     @Test
-    fun clickingRecentsCategory_callsOnAlbumSelectedAndDismiss() {
-        val onAlbumSelected: (AlbumItem) -> Unit = mockk(relaxed = true)
-        val onDismissRequest: () -> Unit = mockk(relaxed = true)
+    fun clickingRecentsCategory_callsOnCategoryClicked() {
+        val onCategoryClicked: (MediaType) -> Unit = mockk(relaxed = true)
 
         composeTestRule.setContent {
             SosmedTheme {
                 SelectAlbumBottomSheetDialogContent(
-                    onDismissRequest = onDismissRequest,
-                    onAlbumSelected = onAlbumSelected,
-                    sheetState = rememberModalBottomSheetState(),
+                    onDismissRequest = {},
+                    onAlbumSelected = {},
+                    onCategoryClicked = onCategoryClicked,
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     albums = emptyList()
                 )
             }
         }
 
-        composeTestRule.onNodeWithText(context.getString(R.string.recents)).performClick()
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.recents)}").performClick()
 
-        verify { 
-            onAlbumSelected(match { it.id == "all" && it.name == context.getString(R.string.recents) })
-            onDismissRequest()
+        verify { onCategoryClicked(MediaType.RECENTS) }
+    }
+
+    @Test
+    fun clickingPhotosCategory_callsOnCategoryClicked() {
+        val onCategoryClicked: (MediaType) -> Unit = mockk(relaxed = true)
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                SelectAlbumBottomSheetDialogContent(
+                    onDismissRequest = {},
+                    onAlbumSelected = {},
+                    onCategoryClicked = onCategoryClicked,
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    albums = emptyList()
+                )
+            }
         }
+
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.photos)}").performClick()
+
+        verify { onCategoryClicked(MediaType.PHOTOS) }
+    }
+
+    @Test
+    fun clickingVideosCategory_callsOnCategoryClicked() {
+        val onCategoryClicked: (MediaType) -> Unit = mockk(relaxed = true)
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                SelectAlbumBottomSheetDialogContent(
+                    onDismissRequest = {},
+                    onAlbumSelected = {},
+                    onCategoryClicked = onCategoryClicked,
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+                    albums = emptyList()
+                )
+            }
+        }
+
+        composeTestRule.onNodeWithTag("Category_${context.getString(R.string.videos)}").performClick()
+
+        verify { onCategoryClicked(MediaType.VIDEOS) }
     }
 
     @Test
@@ -123,15 +189,16 @@ class SelectAlbumBottomSheetDialogTest {
                 SelectAlbumBottomSheetDialogContent(
                     onDismissRequest = onDismissRequest,
                     onAlbumSelected = onAlbumSelected,
-                    sheetState = rememberModalBottomSheetState(),
+                    onCategoryClicked = {},
+                    sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
                     albums = listOf(album)
                 )
             }
         }
 
-        composeTestRule.onNodeWithText("Vacation").performClick()
+        composeTestRule.onNodeWithTag("AlbumItem_Vacation").performClick()
 
-        verify { 
+        verify {
             onAlbumSelected(album)
             onDismissRequest()
         }

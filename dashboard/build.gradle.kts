@@ -83,6 +83,7 @@ dependencies {
 
     // Coil
     implementation(libs.coil.compose)
+    implementation(libs.coil.video)
 
     // Media3
     implementation(libs.androidx.media3.exoplayer)

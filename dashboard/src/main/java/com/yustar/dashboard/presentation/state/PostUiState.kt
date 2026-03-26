@@ -2,6 +2,7 @@ package com.yustar.dashboard.presentation.state
 
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.MediaType
 
 /**
  * Created by Yustar Pramudana on 26/03/26.
@@ -16,5 +17,6 @@ data class PostUiState(
     val selectedTab: Int = 0,
     val tabs: List<String> = emptyList(),
     val showAlbumSelection: Boolean = false,
-    val albums: List<AlbumItem> = emptyList()
+    val albums: List<AlbumItem> = emptyList(),
+    val mediaType: MediaType = MediaType.PHOTOS
 )

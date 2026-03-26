@@ -39,7 +39,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Devices
@@ -51,7 +54,7 @@ import coil.compose.AsyncImage
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.R
 import com.yustar.dashboard.domain.model.AlbumItem
-import com.yustar.dashboard.presentation.screen.PostContent
+import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.presentation.viewmodel.PostViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -59,6 +62,7 @@ import com.yustar.dashboard.presentation.viewmodel.PostViewModel
 fun SelectAlbumBottomSheetDialog(
     onDismissRequest: () -> Unit,
     onAlbumSelected: (AlbumItem) -> Unit,
+    onCategoryClicked: (MediaType) -> Unit,
     viewModel: PostViewModel
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -66,6 +70,7 @@ fun SelectAlbumBottomSheetDialog(
 
     SelectAlbumBottomSheetDialogContent(
         onDismissRequest = onDismissRequest, onAlbumSelected = onAlbumSelected,
+        onCategoryClicked = onCategoryClicked,
         sheetState, uiState.albums
     )
 }
@@ -75,6 +80,7 @@ fun SelectAlbumBottomSheetDialog(
 fun SelectAlbumBottomSheetDialogContent(
     onDismissRequest: () -> Unit,
     onAlbumSelected: (AlbumItem) -> Unit,
+    onCategoryClicked: (MediaType) -> Unit,
     sheetState: SheetState,
     albums: List<AlbumItem>
 ) {
@@ -94,8 +100,6 @@ fun SelectAlbumBottomSheetDialogContent(
         contentColor = MaterialTheme.colorScheme.onSurface,
         modifier = Modifier.fillMaxSize()
     ) {
-        val strRecents = stringResource(R.string.recents)
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -111,7 +115,7 @@ fun SelectAlbumBottomSheetDialogContent(
                     text = stringResource(R.string.cancel),
                     modifier = Modifier
                         .align(Alignment.CenterStart)
-                        .clickable { onDismissRequest() },
+                        .clickable(role = Role.Button) { onDismissRequest() },
                     style = MaterialTheme.typography.bodyLarge,
                     color = MaterialTheme.colorScheme.onSurface
                 )
@@ -133,16 +137,20 @@ fun SelectAlbumBottomSheetDialogContent(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Start
             ) {
-                CategoryItem(icon = Icons.Default.PhotoLibrary, label = stringResource(R.string.recents)) {
-                    onAlbumSelected(AlbumItem(
-                        "all", strRecents, "", null)
-                    )
-                    onDismissRequest()
-                }
+                CategoryItem(
+                    icon = Icons.Default.PhotoLibrary, label = stringResource(R.string.recents),
+                    onClick = { onCategoryClicked(MediaType.RECENTS) }
+                )
                 Spacer(modifier = Modifier.width(32.dp))
-                CategoryItem(icon = Icons.Default.Photo, label = stringResource(R.string.photos))
+                CategoryItem(
+                    icon = Icons.Default.Photo, label = stringResource(R.string.photos),
+                    onClick = { onCategoryClicked(MediaType.PHOTOS) }
+                )
                 Spacer(modifier = Modifier.width(32.dp))
-                CategoryItem(icon = Icons.Default.PlayCircle, label = stringResource(R.string.videos))
+                CategoryItem(
+                    icon = Icons.Default.PlayCircle, label = stringResource(R.string.videos),
+                    onClick = { onCategoryClicked(MediaType.VIDEOS) }
+                )
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -191,12 +199,22 @@ fun SelectAlbumBottomSheetDialogContent(
 fun CategoryItem(icon: ImageVector, label: String, onClick: () -> Unit = {}) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = Modifier.clickable { onClick() }
+        modifier = Modifier
+            .testTag("Category_$label")
+            .clip(RoundedCornerShape(8.dp))
+            .clickable(
+                onClick = onClick,
+                role = Role.Button,
+                onClickLabel = label
+            )
+            .padding(4.dp)
+            .semantics(mergeDescendants = true) {}
     ) {
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .background(MaterialTheme.colorScheme.surfaceVariant, CircleShape),
+                .clip(CircleShape)
+                .background(MaterialTheme.colorScheme.surfaceVariant),
             contentAlignment = Alignment.Center
         ) {
             Icon(
@@ -217,7 +235,16 @@ fun CategoryItem(icon: ImageVector, label: String, onClick: () -> Unit = {}) {
 
 @Composable
 fun AlbumGridItem(album: AlbumItem, onClick: () -> Unit) {
-    Column(modifier = Modifier.clickable { onClick() }) {
+    Column(
+        modifier = Modifier
+            .testTag("AlbumItem_${album.name}")
+            .clickable(
+                onClick = onClick,
+                role = Role.Button,
+                onClickLabel = album.name
+            )
+            .semantics(mergeDescendants = true) {}
+    ) {
         Box(
             modifier = Modifier
                 .aspectRatio(1f)
@@ -233,6 +260,7 @@ fun AlbumGridItem(album: AlbumItem, onClick: () -> Unit) {
             if (album.isVideo) {
                 Text(
                     text = album.duration ?: "",
+                    style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
                         .padding(6.dp)
@@ -262,6 +290,31 @@ fun AlbumGridItem(album: AlbumItem, onClick: () -> Unit) {
     }
 }
 
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_NO, device = Devices.PIXEL_4)
+@Composable
+fun LightModePreviewAlbumGridItem() {
+    SosmedTheme {
+        AlbumGridItem(AlbumItem("1", "Recents", "120", null)) {}
+    }
+}
+
+@Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_4)
+@Composable
+fun NightModePreviewAlbumGridItem() {
+    SosmedTheme {
+        AlbumGridItem(AlbumItem("1", "Recents", "120", null)) {}
+    }
+}
+
+private val mockAlbums = listOf(
+    AlbumItem("1", "Recents", "120", null),
+    AlbumItem("2", "WhatsApp Images", "50", null),
+    AlbumItem("3", "Instagram", "30", null),
+    AlbumItem("4", "Screenshots", "15", null),
+    AlbumItem("5", "Camera", "200", null),
+    AlbumItem("6", "Videos", "10", null, isVideo = true, duration = "05:30")
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Preview(uiMode = Configuration.UI_MODE_NIGHT_YES, device = Devices.PIXEL_4)
 @Composable
@@ -270,8 +323,9 @@ fun NightModePreviewSelectAlbumBottomSheetDialog() {
         SelectAlbumBottomSheetDialogContent(
             onDismissRequest = {},
             onAlbumSelected = {},
+            onCategoryClicked = { _ -> },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            albums = emptyList()
+            albums = mockAlbums
         )
     }
 }
@@ -284,8 +338,9 @@ fun LightModePreviewSelectAlbumBottomSheetDialog() {
         SelectAlbumBottomSheetDialogContent(
             onDismissRequest = {},
             onAlbumSelected = {},
+            onCategoryClicked = { _ -> },
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-            albums = emptyList()
+            albums = mockAlbums
         )
     }
 }

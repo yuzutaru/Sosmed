@@ -11,9 +11,12 @@ import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.presentation.state.PostUiState
+import com.yustar.dashboard.presentation.viewmodel.PostViewModel
 import io.mockk.confirmVerified
+import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Rule
 import org.junit.Test
 
@@ -28,6 +31,7 @@ class PostScreenTest {
     )
 
     private val mockAlbum = AlbumItem("1", "Recents", "2", "content://media/external/images/media/1")
+    private val mockViewModel: PostViewModel = mockk(relaxed = true)
 
     @Test
     fun postContent_displaysHeaderAndInitialState() {
@@ -52,6 +56,7 @@ class PostScreenTest {
         composeTestRule.onNodeWithText("New post").assertIsDisplayed()
         composeTestRule.onNodeWithText("Next").assertIsDisplayed()
         composeTestRule.onNodeWithText("Recents").assertIsDisplayed()
+        composeTestRule.onNodeWithText("SELECT").assertIsDisplayed()
         composeTestRule.onNodeWithContentDescription("Camera").assertIsDisplayed()
     }
 
@@ -157,5 +162,33 @@ class PostScreenTest {
         composeTestRule.onNodeWithTag("post_album_selector").performClick()
         verify { onShowAlbumSelection(true) }
         confirmVerified(onShowAlbumSelection)
+    }
+
+    @Test
+    fun postContent_whenShowAlbumSelectionIsTrue_showsAlbumDialog() {
+        // Stub the uiState flow to return a valid PostUiState
+        every { mockViewModel.uiState } returns MutableStateFlow(PostUiState())
+
+        composeTestRule.setContent {
+            SosmedTheme {
+                PostContent(
+                    uiState = PostUiState(showAlbumSelection = true),
+                    onClose = {},
+                    selectedImage = null,
+                    localImages = emptyList(),
+                    selectedAlbum = mockAlbum,
+                    tabs = listOf("POST"),
+                    selectedTab = 0,
+                    onImageSelected = {},
+                    onTabSelected = {},
+                    onAlbumSelected = {},
+                    onShowAlbumSelection = {},
+                    viewModel = mockViewModel
+                )
+            }
+        }
+
+        // Verify that the album selection dialog content is displayed
+        composeTestRule.onNodeWithText("Select album").assertIsDisplayed()
     }
 }

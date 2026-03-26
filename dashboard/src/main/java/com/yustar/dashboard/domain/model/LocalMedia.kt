@@ -6,5 +6,7 @@ data class LocalMedia(
     val id: Long,
     val uri: Uri,
     val name: String,
-    val dateAdded: Long
+    val dateAdded: Long,
+    val isVideo: Boolean = false,
+    val duration: String? = null
 )
