@@ -13,6 +13,7 @@ import com.yustar.core.data.remote.model.Resource
 import com.yustar.core.data.remote.model.Status
 import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
+import com.yustar.dashboard.data.local.dao.PostDao
 import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.domain.model.PostMedia
 import io.mockk.Runs
@@ -23,10 +24,12 @@ import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
 import io.mockk.unmockkStatic
+import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
 import retrofit2.Response
@@ -48,6 +51,21 @@ class FeedsRepositoryImplTest {
         database = mockk()
         sessionManager = mockk(relaxed = true)
         repository = FeedsRepositoryImpl(context, api, usersApi, database, sessionManager)
+    }
+
+    @Test
+    fun `getFeedsPaged returns paging data flow`() = runTest {
+        // Given
+        val postDao = mockk<PostDao>()
+        every { database.postDao() } returns postDao
+        every { postDao.getPostsPaged() } returns mockk(relaxed = true)
+
+        // When
+        val result = repository.getFeedsPaged().first()
+
+        // Then
+        assertNotNull(result)
+        verify { postDao.getPostsPaged() }
     }
 
     @Test
@@ -175,6 +193,86 @@ class FeedsRepositoryImplTest {
         assertEquals("image.jpg", result[0].name)
         assertEquals(123456L, result[0].dateAdded)
         assertEquals(uri, result[0].uri)
+        
+        unmockkStatic(ContentUris::class)
+    }
+
+    @Test
+    fun `getLocalImages with bucketId calls query with selection`() = runTest {
+        // Given
+        val contentResolver = mockk<ContentResolver>()
+        val cursor = mockk<Cursor>()
+        val bucketId = "bucket123"
+        
+        every { context.contentResolver } returns contentResolver
+        every { 
+            contentResolver.query(
+                any(), any(), 
+                "${MediaStore.Images.Media.BUCKET_ID} = ?", 
+                arrayOf(bucketId), 
+                any()
+            ) 
+        } returns cursor
+        
+        every { cursor.getColumnIndexOrThrow(any()) } returns 0
+        every { cursor.moveToNext() } returns false
+        every { cursor.close() } just Runs
+
+        // When
+        repository.getLocalImages(bucketId).first()
+
+        // Then
+        verify { 
+            contentResolver.query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                any(),
+                "${MediaStore.Images.Media.BUCKET_ID} = ?",
+                arrayOf(bucketId),
+                any()
+            ) 
+        }
+    }
+
+    @Test
+    fun `getLocalAlbums returns list of albums from media store`() = runTest {
+        // Given
+        val contentResolver = mockk<ContentResolver>()
+        val cursor = mockk<Cursor>()
+        val uri = mockk<Uri>()
+        
+        every { context.contentResolver } returns contentResolver
+        every { 
+            contentResolver.query(any(), any(), any(), any(), any()) 
+        } returns cursor
+        
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID) } returns 0
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME) } returns 1
+        every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID) } returns 2
+        
+        every { cursor.moveToNext() } returnsMany listOf(true, true, true, false)
+        every { cursor.getString(0) } returnsMany listOf("bucket1", "bucket1", "bucket2")
+        every { cursor.getString(1) } returnsMany listOf("Album 1", "Album 1", "Album 2")
+        every { cursor.getLong(2) } returnsMany listOf(1L, 2L, 3L)
+        every { cursor.close() } just Runs
+        
+        mockkStatic(ContentUris::class)
+        every { ContentUris.withAppendedId(any(), any()) } returns uri
+        every { uri.toString() } returns "uri_string"
+
+        // When
+        val result = repository.getLocalAlbums().first()
+
+        // Then
+        assertEquals(2, result.size)
+        // Sorted by count descending: Album 1 has 2, Album 2 has 1
+        assertEquals("bucket1", result[0].id)
+        assertEquals("Album 1", result[0].name)
+        assertEquals("2", result[0].count)
+        assertEquals("uri_string", result[0].thumbnailUri)
+        
+        assertEquals("bucket2", result[1].id)
+        assertEquals("Album 2", result[1].name)
+        assertEquals("1", result[1].count)
         
         unmockkStatic(ContentUris::class)
     }

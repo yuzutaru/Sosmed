@@ -44,7 +44,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -65,7 +65,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.R
+import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.presentation.event.PostUiEvent
+import com.yustar.dashboard.presentation.state.PostUiState
 import com.yustar.dashboard.presentation.viewmodel.PostViewModel
 import com.yustar.dashboard.presentation.widget.SelectAlbumBottomSheetDialog
 
@@ -101,41 +104,55 @@ fun PostScreen(
         }
     }
 
-    val localImages by viewModel.localImages.collectAsStateWithLifecycle()
-    val selectedImage by viewModel.selectedImage.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     var selectedTab by remember { mutableIntStateOf(0) }
-    val tabs = listOf("POST", "STORY", "REEL", "LIVE")
+    viewModel.setTabs(listOf("POST", "STORY", "REEL", "LIVE"))
 
     PostContent(
-        onClose = onClose, selectedImage = selectedImage, localImages = localImages, tabs = tabs,
+        uiState = uiState,
+        onClose = onClose,
+        selectedImage = uiState.selectedImage,
+        localImages = uiState.localImages,
+        selectedAlbum = uiState.selectedAlbum,
+        tabs = uiState.tabs,
         selectedTab = selectedTab,
         onImageSelected = { localMedia ->
-            viewModel.onImageSelected(localMedia)
+            viewModel.onEvent(PostUiEvent.OnImageSelected(localMedia))
         },
         onTabSelected = { selected ->
-            selectedTab = selected
-        }
+            viewModel.onEvent(PostUiEvent.OnTabSelected(selected))
+        },
+        onAlbumSelected = { album ->
+            viewModel.onEvent(PostUiEvent.OnAlbumSelected(album))
+        },
+        onShowAlbumSelection = { viewModel.onEvent(PostUiEvent.ShowAlbumSelection(it)) },
+        viewModel = viewModel
     )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PostContent(
-    onClose: () -> Unit, selectedImage: LocalMedia?, localImages: List<LocalMedia>,
-    tabs: List<String>, selectedTab: Int,
+    uiState: PostUiState,
+    onClose: () -> Unit,
+    selectedImage: LocalMedia?,
+    localImages: List<LocalMedia>,
+    selectedAlbum: AlbumItem?,
+    tabs: List<String>,
+    selectedTab: Int,
     onImageSelected: (LocalMedia) -> Unit,
-    onTabSelected: (Int) -> Unit
+    onTabSelected: (Int) -> Unit,
+    onAlbumSelected: (AlbumItem) -> Unit,
+    onShowAlbumSelection: (Boolean) -> Unit,
+    viewModel: PostViewModel? = null
 ) {
-    var showAlbumSelection by remember { mutableStateOf(false) }
 
-    if (showAlbumSelection) {
+    if ( uiState.showAlbumSelection && viewModel != null) {
         SelectAlbumBottomSheetDialog(
-            onDismissRequest = { showAlbumSelection = false },
-            onAlbumSelected = { album ->
-                // Handle album selection if needed
-                showAlbumSelection = false
-            }
+            onDismissRequest = { onShowAlbumSelection(false) },
+            onAlbumSelected = onAlbumSelected,
+            viewModel = viewModel
         )
     }
 
@@ -150,12 +167,18 @@ fun PostContent(
                         )
                     },
                     navigationIcon = {
-                        IconButton(onClick = onClose) {
+                        IconButton(
+                            onClick = onClose,
+                            modifier = Modifier.testTag("post_close_button")
+                        ) {
                             Icon(Icons.Default.Close, contentDescription = "Close")
                         }
                     },
                     actions = {
-                        TextButton(onClick = { /* Handle Next */ }) {
+                        TextButton(
+                            onClick = { /* Handle Next */ },
+                            modifier = Modifier.testTag("post_next_button")
+                        ) {
                             Text(
                                 text = stringResource(R.string.next),
                                 style = MaterialTheme.typography.bodyMedium,
@@ -176,7 +199,8 @@ fun PostContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
-                    .background(MaterialTheme.colorScheme.background),
+                    .background(MaterialTheme.colorScheme.background)
+                    .testTag("post_media_grid"),
                 horizontalArrangement = Arrangement.spacedBy(1.dp),
                 verticalArrangement = Arrangement.spacedBy(1.dp)
             ) {
@@ -226,10 +250,12 @@ fun PostContent(
                     ) {
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable { showAlbumSelection = true }
+                            modifier = Modifier
+                                .clickable { onShowAlbumSelection(true) }
+                                .testTag("post_album_selector")
                         ) {
                             Text(
-                                text = stringResource(R.string.recents),
+                                text = selectedAlbum?.name ?: stringResource(R.string.recents),
                                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
                             )
                             Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
@@ -283,6 +309,7 @@ fun PostContent(
                         modifier = Modifier
                             .aspectRatio(1f)
                             .clickable { onImageSelected(media) }
+                            .testTag("post_image_item_$index")
                     ) {
                         AsyncImage(
                             model = media.uri,
@@ -330,6 +357,7 @@ fun PostContent(
                             modifier = Modifier
                                 .padding(horizontal = 16.dp)
                                 .clickable { onTabSelected(index) }
+                                .testTag("post_tab_$index")
                         )
                     }
                 }
@@ -343,8 +371,17 @@ fun PostContent(
 fun NightModePreviewPostScreen() {
     SosmedTheme {
         PostContent(
-            onClose = {}, localImages = emptyList(), selectedImage = null, tabs = emptyList(),
-            selectedTab = 0, onImageSelected = {}, onTabSelected = {}
+            uiState = PostUiState(),
+            onClose = {},
+            localImages = emptyList(),
+            selectedImage = null,
+            selectedAlbum = null,
+            tabs = emptyList(),
+            selectedTab = 0,
+            onImageSelected = {},
+            onTabSelected = {},
+            onAlbumSelected = {},
+            onShowAlbumSelection = { _ -> }
         )
     }
 }
@@ -354,8 +391,17 @@ fun NightModePreviewPostScreen() {
 fun LightModePreviewPostScreen() {
     SosmedTheme {
         PostContent(
-            onClose = {}, localImages = emptyList(), selectedImage = null, tabs = emptyList(),
-            selectedTab = 0, onImageSelected = {}, onTabSelected = {}
+            uiState = PostUiState(),
+            onClose = {},
+            localImages = emptyList(),
+            selectedImage = null,
+            selectedAlbum = null,
+            tabs = emptyList(),
+            selectedTab = 0,
+            onImageSelected = {},
+            onTabSelected = {},
+            onAlbumSelected = {},
+            onShowAlbumSelection = { _ -> }
         )
     }
 }

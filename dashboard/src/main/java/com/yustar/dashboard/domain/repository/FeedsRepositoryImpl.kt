@@ -17,6 +17,7 @@ import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.data.remote.model.CreatePostMediaDto
 import com.yustar.dashboard.data.remote.model.CreatePostRequestDto
 import com.yustar.dashboard.data.repository.FeedsRemoteMediator
+import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
@@ -128,20 +129,22 @@ class FeedsRepositoryImpl(
         }
     }
 
-    override fun getLocalImages(): Flow<List<LocalMedia>> = flow {
+    override fun getLocalImages(bucketId: String?): Flow<List<LocalMedia>> = flow {
         val images = mutableListOf<LocalMedia>()
         val projection = arrayOf(
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DISPLAY_NAME,
             MediaStore.Images.Media.DATE_ADDED
         )
+        val selection = if (bucketId != null) "${MediaStore.Images.Media.BUCKET_ID} = ?" else null
+        val selectionArgs = if (bucketId != null) arrayOf(bucketId) else null
         val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
 
         context.contentResolver.query(
             MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
             projection,
-            null,
-            null,
+            selection,
+            selectionArgs,
             sortOrder
         )?.use { cursor ->
             val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
@@ -158,4 +161,55 @@ class FeedsRepositoryImpl(
         }
         emit(images)
     }
+
+    override fun getLocalAlbums(): Flow<List<AlbumItem>> = flow {
+        val albums = mutableListOf<AlbumItem>()
+        val projection = arrayOf(
+            MediaStore.Images.Media.BUCKET_ID,
+            MediaStore.Images.Media.BUCKET_DISPLAY_NAME,
+            MediaStore.Images.Media._ID
+        )
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC"
+
+        val albumMap = mutableMapOf<String, AlbumData>()
+
+        context.contentResolver.query(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            projection,
+            null,
+            null,
+            sortOrder
+        )?.use { cursor ->
+            val bucketIdColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID)
+            val bucketNameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_DISPLAY_NAME)
+            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+
+            while (cursor.moveToNext()) {
+                val bucketId = cursor.getString(bucketIdColumn)
+                val bucketName = cursor.getString(bucketNameColumn)
+                val id = cursor.getLong(idColumn)
+                val uri = ContentUris.withAppendedId(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, id).toString()
+
+                val data = albumMap[bucketId]
+                if (data == null) {
+                    albumMap[bucketId] = AlbumData(bucketName, 1, uri)
+                } else {
+                    albumMap[bucketId] = data.copy(count = data.count + 1)
+                }
+            }
+        }
+
+        albumMap.forEach { (id, data) ->
+            albums.add(AlbumItem(id, data.name, data.count.toString(), data.thumbnailUri))
+        }
+
+        // Add a "Recents" album at the beginning if not empty
+        if (albums.isNotEmpty()) {
+             // You might want to calculate total count for Recents or just leave it as is.
+        }
+
+        emit(albums.sortedByDescending { it.count.toInt() })
+    }
+
+    private data class AlbumData(val name: String, val count: Int, val thumbnailUri: String)
 }
