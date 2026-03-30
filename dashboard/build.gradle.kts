@@ -1,6 +1,5 @@
 plugins {
     alias(libs.plugins.android.library)
-    alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
 }
@@ -38,7 +37,6 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
-    implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
@@ -51,7 +49,6 @@ dependencies {
     testImplementation(libs.org.jetbrains.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
-    androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.navigation.testing)
     androidTestImplementation(libs.io.mockk.android)
@@ -88,4 +85,16 @@ dependencies {
     // Media3
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
+
+    // Supabase
+    implementation(libs.io.github.jan.tennert.supabase.postgrest)
+    implementation(libs.io.github.jan.tennert.supabase.storage)
+    implementation(libs.io.github.jan.tennert.supabase.auth)
+    implementation(libs.io.github.jan.tennert.supabase.functions)
+
+    // Serialization
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+
+    // Ktor
+    implementation(libs.ktor.client.mock)
 }

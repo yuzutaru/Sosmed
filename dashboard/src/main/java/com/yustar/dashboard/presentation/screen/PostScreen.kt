@@ -3,6 +3,7 @@ package com.yustar.dashboard.presentation.screen
 import android.Manifest
 import android.content.pm.PackageManager
 import android.content.res.Configuration
+import android.net.Uri
 import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -78,6 +79,7 @@ import com.yustar.dashboard.presentation.widget.SelectAlbumBottomSheetDialog
 @Composable
 fun PostScreen(
     onClose: () -> Unit,
+    onNext: (Uri) -> Unit,
     viewModel: PostViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -117,6 +119,7 @@ fun PostScreen(
     PostContent(
         uiState = uiState,
         onClose = onClose,
+        onNext = onNext,
         selectedImage = uiState.selectedImage,
         localImages = uiState.localImages,
         selectedAlbum = uiState.selectedAlbum,
@@ -141,6 +144,7 @@ fun PostScreen(
 fun PostContent(
     uiState: PostUiState,
     onClose: () -> Unit,
+    onNext: (Uri) -> Unit,
     selectedImage: LocalMedia?,
     localImages: List<LocalMedia>,
     selectedAlbum: AlbumItem?,
@@ -185,13 +189,16 @@ fun PostContent(
                     },
                     actions = {
                         TextButton(
-                            onClick = { /* Handle Next */ },
-                            modifier = Modifier.testTag("post_next_button")
+                            onClick = { 
+                                selectedImage?.uri?.let { onNext(it) }
+                            },
+                            modifier = Modifier.testTag("post_next_button"),
+                            enabled = selectedImage != null
                         ) {
                             Text(
                                 text = stringResource(R.string.next),
                                 style = MaterialTheme.typography.bodyMedium,
-                                color = Color(0xFF3897F0),
+                                color = if (selectedImage != null) Color(0xFF3897F0) else Color.Gray,
                                 fontWeight = FontWeight.Bold,
                                 fontSize = 16.sp
                             )
@@ -408,6 +415,7 @@ fun NightModePreviewPostScreen() {
         PostContent(
             uiState = PostUiState(),
             onClose = {},
+            onNext = {},
             localImages = emptyList(),
             selectedImage = null,
             selectedAlbum = null,
@@ -428,6 +436,7 @@ fun LightModePreviewPostScreen() {
         PostContent(
             uiState = PostUiState(),
             onClose = {},
+            onNext = {},
             localImages = emptyList(),
             selectedImage = null,
             selectedAlbum = null,

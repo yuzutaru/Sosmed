@@ -1,8 +1,9 @@
 package com.yustar.dashboard.domain.usecase
 
 import com.yustar.core.data.remote.model.Resource
+import com.yustar.dashboard.data.remote.model.MediaDto
+import com.yustar.dashboard.data.repository.FeedsRepository
 import com.yustar.dashboard.domain.model.PostMedia
-import com.yustar.dashboard.domain.repository.FeedsRepository
 import javax.inject.Inject
 
 /**
@@ -17,6 +18,18 @@ class CreatePostUseCase @Inject constructor(
         location: String,
         media: List<PostMedia>
     ): Resource<Unit> {
-        return repository.createPost(caption, location, media)
+        return try {
+            val mediaDto = media.mapIndexed { index, postMedia ->
+                MediaDto(
+                    media_url = postMedia.url,
+                    media_type = postMedia.mediaType ?: "",
+                    position = index
+                )
+            }
+            repository.createPost(caption, location, mediaDto)
+            Resource.success(Unit)
+        } catch (e: Exception) {
+            Resource.error(null, e.localizedMessage)
+        }
     }
 }

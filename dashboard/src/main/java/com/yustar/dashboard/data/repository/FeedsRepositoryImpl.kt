@@ -1,4 +1,4 @@
-package com.yustar.dashboard.domain.repository
+package com.yustar.dashboard.data.repository
 
 import android.content.ContentUris
 import android.content.Context
@@ -10,14 +10,11 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import androidx.paging.map
 import com.yustar.core.data.remote.UsersApi
-import com.yustar.core.data.remote.model.RefreshTokenRequest
-import com.yustar.core.data.remote.model.Resource
 import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.remote.FeedsApi
-import com.yustar.dashboard.data.remote.model.CreatePostMediaDto
-import com.yustar.dashboard.data.remote.model.CreatePostRequestDto
-import com.yustar.dashboard.data.repository.FeedsRemoteMediator
+import com.yustar.dashboard.data.remote.SupabaseClientWrapper
+import com.yustar.dashboard.data.remote.model.MediaDto
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.domain.model.MediaType
@@ -27,13 +24,20 @@ import com.yustar.dashboard.domain.model.PostProfile
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.serialization.builtins.ListSerializer
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
+import kotlinx.serialization.json.put
 
 class FeedsRepositoryImpl(
     private val context: Context,
     private val api: FeedsApi,
     private val usersApi: UsersApi,
     private val database: FeedsDatabase,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val supabaseWrapper: SupabaseClientWrapper
 ) : FeedsRepository {
 
     @OptIn(ExperimentalPagingApi::class)
@@ -76,58 +80,6 @@ class FeedsRepositoryImpl(
                     }
                 )
             }
-        }
-    }
-
-    override suspend fun createPost(
-        caption: String,
-        location: String,
-        media: List<PostMedia>
-    ): Resource<Unit> {
-        var token = sessionManager.getAccessToken() ?: return Resource.error(null, "Token not found")
-        val request = CreatePostRequestDto(
-            caption = caption,
-            location = location,
-            media = media.mapIndexed { index, postMedia ->
-                CreatePostMediaDto(
-                    mediaUrl = postMedia.url,
-                    mediaType = postMedia.mediaType ?: "image",
-                    position = index + 1
-                )
-            }
-        )
-        return try {
-            var response = api.createPost(
-                authorization = "Bearer $token",
-                request = request
-            )
-
-            if (response.code() == 401 || response.code() == 403) {
-                val refreshToken = sessionManager.getRefreshToken()
-                if (refreshToken != null) {
-                    val refreshResponse = usersApi.refreshToken(
-                        refreshTokenRequest = RefreshTokenRequest(refreshToken)
-                    )
-                    sessionManager.saveTokens(
-                        refreshResponse.accessToken,
-                        refreshResponse.refreshToken
-                    )
-                    token = refreshResponse.accessToken
-
-                    response = api.createPost(
-                        authorization = "Bearer $token",
-                        request = request
-                    )
-                }
-            }
-
-            if (response.code() == 204) {
-                Resource.success(Unit)
-            } else {
-                Resource.error(null, response.message())
-            }
-        } catch (e: Exception) {
-            Resource.error(null, e.localizedMessage)
         }
     }
 
@@ -268,6 +220,48 @@ class FeedsRepositoryImpl(
         }
 
         emit(albums.sortedByDescending { it.count.toInt() })
+    }
+
+    override suspend fun getSignedUploadUrl(): Pair<String, String> {
+        val response = supabaseWrapper.invokeFunction("create-signed-upload")
+
+        val json = Json.parseToJsonElement(response).jsonObject
+        val path = json["path"]!!.jsonPrimitive.content
+        val token = json["token"]!!.jsonPrimitive.content
+
+        return path to token
+    }
+
+    override suspend fun uploadFile(
+        path: String,
+        token: String,
+        bytes: ByteArray
+    ) {
+        supabaseWrapper.uploadToSignedUrl(
+            bucket = "post-media",
+            path = path,
+            token = token,
+            data = bytes
+        )
+    }
+
+    override fun getPublicUrl(path: String): String {
+        return supabaseWrapper.getPublicUrl("post-media", path)
+    }
+
+    override suspend fun createPost(
+        caption: String,
+        location: String,
+        media: List<MediaDto>
+    ) {
+        supabaseWrapper.rpc(
+            "create_post_with_media",
+            buildJsonObject {
+                put("p_caption", caption)
+                put("p_location", location)
+                put("p_media", Json.encodeToJsonElement(ListSerializer(MediaDto.serializer()), media))
+            }
+        )
     }
 
     private data class AlbumData(val name: String, val count: Int, val thumbnailUri: String)

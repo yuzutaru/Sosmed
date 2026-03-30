@@ -3,7 +3,7 @@ package com.yustar.dashboard.domain.usecase
 import android.net.Uri
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.domain.model.MediaType
-import com.yustar.dashboard.domain.repository.FeedsRepository
+import com.yustar.dashboard.data.repository.FeedsRepository
 import io.mockk.every
 import io.mockk.mockk
 import kotlinx.coroutines.flow.first

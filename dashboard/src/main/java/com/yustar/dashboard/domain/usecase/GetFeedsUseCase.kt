@@ -2,7 +2,7 @@ package com.yustar.dashboard.domain.usecase
 
 import androidx.paging.PagingData
 import com.yustar.dashboard.domain.model.Post
-import com.yustar.dashboard.domain.repository.FeedsRepository
+import com.yustar.dashboard.data.repository.FeedsRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 

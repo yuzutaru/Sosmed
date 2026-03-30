@@ -7,16 +7,14 @@ import android.database.Cursor
 import android.net.Uri
 import android.provider.MediaStore
 import com.yustar.core.data.remote.UsersApi
-import com.yustar.core.data.remote.model.RefreshTokenResponse
-import com.yustar.core.data.remote.model.RefreshTokenUser
-import com.yustar.core.data.remote.model.Resource
-import com.yustar.core.data.remote.model.Status
 import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.dao.PostDao
 import com.yustar.dashboard.data.remote.FeedsApi
+import com.yustar.dashboard.data.remote.SupabaseClientWrapper
+import com.yustar.dashboard.data.remote.model.MediaDto
+import com.yustar.dashboard.data.repository.FeedsRepositoryImpl
 import com.yustar.dashboard.domain.model.MediaType
-import com.yustar.dashboard.domain.model.PostMedia
 import io.mockk.Runs
 import io.mockk.coEvery
 import io.mockk.coVerify
@@ -24,16 +22,15 @@ import io.mockk.every
 import io.mockk.just
 import io.mockk.mockk
 import io.mockk.mockkStatic
-import io.mockk.unmockkStatic
+import io.mockk.unmockkAll
 import io.mockk.verify
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
-import okhttp3.ResponseBody.Companion.toResponseBody
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Before
 import org.junit.Test
-import retrofit2.Response
 
 class FeedsRepositoryImplTest {
 
@@ -42,6 +39,7 @@ class FeedsRepositoryImplTest {
     private lateinit var usersApi: UsersApi
     private lateinit var database: FeedsDatabase
     private lateinit var sessionManager: SessionManager
+    private lateinit var supabaseWrapper: SupabaseClientWrapper
     private lateinit var repository: FeedsRepositoryImpl
 
     @Before
@@ -51,7 +49,21 @@ class FeedsRepositoryImplTest {
         usersApi = mockk()
         database = mockk()
         sessionManager = mockk(relaxed = true)
-        repository = FeedsRepositoryImpl(context, api, usersApi, database, sessionManager)
+        supabaseWrapper = mockk()
+
+        repository = FeedsRepositoryImpl(
+            context = context,
+            api = api,
+            usersApi = usersApi,
+            database = database,
+            sessionManager = sessionManager,
+            supabaseWrapper = supabaseWrapper
+        )
+    }
+
+    @After
+    fun tearDown() {
+        unmockkAll()
     }
 
     @Test
@@ -70,94 +82,76 @@ class FeedsRepositoryImplTest {
     }
 
     @Test
-    fun `createPost success returns Resource success`() = runTest {
+    fun `createPost success calls rpc`() = runTest {
         // Given
         val caption = "caption"
         val location = "location"
-        val media = listOf(PostMedia("1", "1", "url", "image"))
-        val token = "access_token"
+        val media = listOf(MediaDto("url", "image", 0))
 
-        every { sessionManager.getAccessToken() } returns token
-        coEvery { api.createPost(authorization = any(), request = any()) } returns Response.success(204, Unit)
+        coEvery { 
+            supabaseWrapper.rpc(
+                functionName = "create_post_with_media", 
+                parameters = any()
+            ) 
+        } returns Unit
 
         // When
-        val result = repository.createPost(caption, location, media)
+        repository.createPost(caption, location, media)
 
         // Then
-        assertEquals(Status.SUCCESS, result.status)
-        coVerify { api.createPost(authorization = "Bearer $token", request = any()) }
+        coVerify { 
+            supabaseWrapper.rpc(
+                functionName = "create_post_with_media", 
+                parameters = any()
+            ) 
+        }
     }
 
     @Test
-    fun `createPost returns error when token is missing`() = runTest {
+    fun `getSignedUploadUrl returns path and token`() = runTest {
         // Given
-        every { sessionManager.getAccessToken() } returns null
+        val jsonResponse = """{"path":"test/path","token":"test_token"}"""
+        coEvery { supabaseWrapper.invokeFunction("create-signed-upload") } returns jsonResponse
 
         // When
-        val result = repository.createPost("caption", "location", emptyList())
+        val (path, token) = repository.getSignedUploadUrl()
 
         // Then
-        assertEquals(Status.ERROR, result.status)
-        assertEquals("Token not found", result.message)
+        assertEquals("test/path", path)
+        assertEquals("test_token", token)
     }
 
     @Test
-    fun `createPost retry success after token refresh`() = runTest {
+    fun `uploadFile calls uploadToSignedUrl`() = runTest {
         // Given
-        val caption = "caption"
-        val location = "location"
-        val media = emptyList<PostMedia>()
-        val oldToken = "old_token"
-        val refreshToken = "refresh_token"
-        val newToken = "new_token"
-
-        every { sessionManager.getAccessToken() } returns oldToken
-        every { sessionManager.getRefreshToken() } returns refreshToken
-        
-        // First call fails with 401
+        val path = "path"
+        val token = "token"
+        val bytes = byteArrayOf(1, 2, 3)
         coEvery { 
-            api.createPost(authorization = "Bearer $oldToken", request = any()) 
-        } returns Response.error(401, "".toResponseBody())
-
-        // Refresh token succeeds
-        coEvery { 
-            usersApi.refreshToken(refreshTokenRequest = any()) 
-        } returns RefreshTokenResponse(
-            accessToken = newToken,
-            refreshToken = "new_refresh_token",
-            tokenType = "bearer",
-            expiresIn = 3600,
-            user = RefreshTokenUser("id", "email")
-        )
-
-        // Second call succeeds
-        coEvery { 
-            api.createPost(authorization = "Bearer $newToken", request = any()) 
-        } returns Response.success(204, Unit)
+            supabaseWrapper.uploadToSignedUrl("post-media", path, token, bytes) 
+        } returns Unit
 
         // When
-        val result = repository.createPost(caption, location, media)
+        repository.uploadFile(path, token, bytes)
 
         // Then
-        assertEquals(Status.SUCCESS, result.status)
-        coVerify { sessionManager.saveTokens(newToken, "new_refresh_token") }
-        coVerify(exactly = 1) { api.createPost(authorization = "Bearer $oldToken", request = any()) }
-        coVerify(exactly = 1) { api.createPost(authorization = "Bearer $newToken", request = any()) }
+        coVerify { 
+            supabaseWrapper.uploadToSignedUrl("post-media", path, token, bytes) 
+        }
     }
 
     @Test
-    fun `createPost returns error when api throws exception`() = runTest {
+    fun `getPublicUrl returns url`() = runTest {
         // Given
-        val errorMessage = "Network Error"
-        every { sessionManager.getAccessToken() } returns "token"
-        coEvery { api.createPost(authorization = any(), request = any()) } throws Exception(errorMessage)
+        val path = "path"
+        val expectedUrl = "https://public.url/path"
+        every { supabaseWrapper.getPublicUrl("post-media", path) } returns expectedUrl
 
         // When
-        val result = repository.createPost("caption", "location", emptyList())
+        val result = repository.getPublicUrl(path)
 
         // Then
-        assertEquals(Status.ERROR, result.status)
-        assertEquals(errorMessage, result.message)
+        assertEquals(expectedUrl, result)
     }
 
     @Test
@@ -180,12 +174,16 @@ class FeedsRepositoryImplTest {
         every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME) } returns 1
         every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED) } returns 2
         every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE) } returns 3
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE) } returns 4
+        every { cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION) } returns 5
         
         every { cursor.moveToNext() } returnsMany listOf(true, false)
         every { cursor.getLong(0) } returns 1L
         every { cursor.getString(1) } returns "image.jpg"
         every { cursor.getLong(2) } returns 123456L
         every { cursor.getInt(3) } returns MediaStore.Files.FileColumns.MEDIA_TYPE_IMAGE
+        every { cursor.getString(4) } returns "image/jpeg"
+        every { cursor.getLong(5) } returns 0L
         every { cursor.close() } just Runs
         
         mockkStatic(ContentUris::class)
@@ -200,9 +198,50 @@ class FeedsRepositoryImplTest {
         assertEquals("image.jpg", result[0].name)
         assertEquals(123456L, result[0].dateAdded)
         assertEquals(uri, result[0].uri)
+    }
+
+    @Test
+    fun `getLocalImages returns list of videos from media store`() = runTest {
+        // Given
+        val contentResolver = mockk<ContentResolver>()
+        val cursor = mockk<Cursor>()
+        val uri = mockk<Uri>()
+        val externalUri = mockk<Uri>()
         
-        unmockkStatic(ContentUris::class)
-        unmockkStatic(MediaStore.Files::class)
+        mockkStatic(MediaStore.Files::class)
+        every { MediaStore.Files.getContentUri("external") } returns externalUri
+
+        every { context.contentResolver } returns contentResolver
+        every { 
+            contentResolver.query(any(), any(), any(), any(), any()) 
+        } returns cursor
+        
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns._ID) } returns 0
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DISPLAY_NAME) } returns 1
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.DATE_ADDED) } returns 2
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MEDIA_TYPE) } returns 3
+        every { cursor.getColumnIndexOrThrow(MediaStore.Files.FileColumns.MIME_TYPE) } returns 4
+        every { cursor.getColumnIndexOrThrow(MediaStore.Video.VideoColumns.DURATION) } returns 5
+        
+        every { cursor.moveToNext() } returnsMany listOf(true, false)
+        every { cursor.getLong(0) } returns 1L
+        every { cursor.getString(1) } returns "video.mp4"
+        every { cursor.getLong(2) } returns 123456L
+        every { cursor.getInt(3) } returns MediaStore.Files.FileColumns.MEDIA_TYPE_VIDEO
+        every { cursor.getString(4) } returns "video/mp4"
+        every { cursor.getLong(5) } returns 65000L // 1:05
+        every { cursor.close() } just Runs
+        
+        mockkStatic(ContentUris::class)
+        every { ContentUris.withAppendedId(any(), any()) } returns uri
+
+        // When
+        val result = repository.getLocalImages(type = MediaType.VIDEOS).first()
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals(true, result[0].isVideo)
+        assertEquals("1:05", result[0].duration)
     }
 
     @Test
@@ -243,7 +282,6 @@ class FeedsRepositoryImplTest {
                 any()
             ) 
         }
-        unmockkStatic(MediaStore.Files::class)
     }
 
     @Test
@@ -254,8 +292,9 @@ class FeedsRepositoryImplTest {
         val uri = mockk<Uri>()
         
         every { context.contentResolver } returns contentResolver
+        
         every { 
-            contentResolver.query(any(), any(), any(), any(), any()) 
+            contentResolver.query(any(), any(), any(), any(), any())
         } returns cursor
         
         every { cursor.getColumnIndexOrThrow(MediaStore.Images.Media.BUCKET_ID) } returns 0
@@ -286,7 +325,5 @@ class FeedsRepositoryImplTest {
         assertEquals("bucket2", result[1].id)
         assertEquals("Album 2", result[1].name)
         assertEquals("1", result[1].count)
-        
-        unmockkStatic(ContentUris::class)
     }
 }

@@ -2,7 +2,7 @@ package com.yustar.dashboard.domain.usecase
 
 import com.yustar.dashboard.domain.model.LocalMedia
 import com.yustar.dashboard.domain.model.MediaType
-import com.yustar.dashboard.domain.repository.FeedsRepository
+import com.yustar.dashboard.data.repository.FeedsRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
