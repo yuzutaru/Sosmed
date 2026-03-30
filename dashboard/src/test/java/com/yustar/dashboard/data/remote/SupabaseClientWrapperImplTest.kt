@@ -5,6 +5,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.functions.Functions
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.storage.Storage
+import io.github.jan.supabase.storage.resumable.MemoryResumableCache
 import io.ktor.client.engine.mock.MockEngine
 import io.ktor.client.engine.mock.MockRequestHandleScope
 import io.ktor.client.engine.mock.respond
@@ -15,6 +16,8 @@ import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpStatusCode
 import io.ktor.http.headersOf
 import kotlinx.coroutines.test.runTest
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -29,7 +32,11 @@ class SupabaseClientWrapperImplTest {
         supabase = createSupabaseClient("https://test.supabase.co", "test-key") {
             httpEngine = mockEngine
             install(Functions)
-            install(Storage)
+            install(Storage) {
+                resumable {
+                    cache = MemoryResumableCache()
+                }
+            }
             install(Postgrest)
         }
         wrapper = SupabaseClientWrapperImpl(supabase)
@@ -61,7 +68,20 @@ class SupabaseClientWrapperImplTest {
         var capturedPath = ""
         setupSupabase { request ->
             capturedPath = request.url.encodedPath
-            respond("", status = HttpStatusCode.OK)
+            // The storage SDK version 3.0.1 expects "id" and "key" in the response.
+            // Some versions might expect "Id" and "Key". We provide both to be safe.
+            val responseBody = buildJsonObject {
+                put("id", "test-id")
+                put("Id", "test-id")
+                put("key", "test-bucket/test/path")
+                put("Key", "test-bucket/test/path")
+            }.toString()
+            
+            respond(
+                content = responseBody,
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
         }
 
         val bucket = "test-bucket"
@@ -95,10 +115,15 @@ class SupabaseClientWrapperImplTest {
         var capturedUrl = ""
         setupSupabase { request ->
             capturedUrl = request.url.toString()
-            respond("[]", status = HttpStatusCode.OK)
+            respond(
+                content = "[]",
+                status = HttpStatusCode.OK,
+                headers = headersOf(HttpHeaders.ContentType, ContentType.Application.Json.toString())
+            )
         }
 
-        wrapper.rpc("test_rpc", mapOf("param" to "value"))
+        // Use buildJsonObject to avoid serialization issues with Any
+        wrapper.rpc("test_rpc", buildJsonObject { })
 
         assert(capturedUrl.contains("/rest/v1/rpc/test_rpc"))
     }

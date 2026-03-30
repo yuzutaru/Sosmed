@@ -6,6 +6,7 @@ import io.github.jan.supabase.postgrest.postgrest
 import io.github.jan.supabase.postgrest.rpc
 import io.github.jan.supabase.storage.storage
 import io.ktor.client.statement.bodyAsText
+import kotlinx.serialization.json.JsonObject
 
 class SupabaseClientWrapperImpl(
     private val supabase: SupabaseClient
@@ -28,7 +29,7 @@ class SupabaseClientWrapperImpl(
         return supabase.storage.from(bucket).publicUrl(path)
     }
 
-    override suspend fun rpc(functionName: String, parameters: Any) {
+    override suspend fun rpc(functionName: String, parameters: JsonObject) {
         supabase.postgrest.rpc(functionName, parameters)
     }
 }
