@@ -61,6 +61,10 @@ class PostViewModel @Inject constructor(
             }
             is PostUiEvent.OnImageSelected -> _uiState.update { it.copy(selectedImage = event.image) }
             is PostUiEvent.OnTabSelected -> _uiState.update { it.copy(selectedTab = event.tab) }
+            is PostUiEvent.OnCaptionChanged -> _uiState.update { it.copy(caption = event.caption) }
+            is PostUiEvent.OnShareClick -> {
+                // Handle share logic
+            }
         }
     }
 }

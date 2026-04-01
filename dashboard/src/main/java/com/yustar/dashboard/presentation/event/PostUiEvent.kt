@@ -12,4 +12,6 @@ sealed class PostUiEvent {
     data class OnImageSelected(val image: LocalMedia) : PostUiEvent()
     data class OnAlbumSelected(val album: AlbumItem) : PostUiEvent()
     data class OnTabSelected(val tab: Int) : PostUiEvent()
+    data class OnCaptionChanged(val caption: String) : PostUiEvent()
+    data object OnShareClick : PostUiEvent()
 }

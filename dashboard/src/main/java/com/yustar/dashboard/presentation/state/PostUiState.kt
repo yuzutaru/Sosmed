@@ -18,5 +18,6 @@ data class PostUiState(
     val tabs: List<String> = emptyList(),
     val showAlbumSelection: Boolean = false,
     val albums: List<AlbumItem> = emptyList(),
-    val mediaType: MediaType = MediaType.PHOTOS
+    val mediaType: MediaType = MediaType.PHOTOS,
+    val caption: String = ""
 )

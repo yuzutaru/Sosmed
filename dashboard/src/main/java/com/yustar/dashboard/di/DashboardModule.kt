@@ -2,7 +2,6 @@ package com.yustar.dashboard.di
 
 import android.content.Context
 import androidx.room.Room
-import com.yustar.core.BuildConfig
 import com.yustar.core.data.remote.UsersApi
 import com.yustar.core.session.SessionManager
 import com.yustar.dashboard.data.local.FeedsDatabase
@@ -17,11 +16,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import io.github.jan.supabase.SupabaseClient
-import io.github.jan.supabase.createSupabaseClient
-import io.github.jan.supabase.functions.Functions
-import io.github.jan.supabase.auth.Auth
-import io.github.jan.supabase.postgrest.Postgrest
-import io.github.jan.supabase.storage.Storage
 import retrofit2.Retrofit
 import javax.inject.Singleton
 
@@ -32,20 +26,6 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 object DashboardModule {
-
-    @Provides
-    @Singleton
-    fun provideSupabaseClient(): SupabaseClient {
-        return createSupabaseClient(
-            supabaseUrl = BuildConfig.BASE_URL,
-            supabaseKey = BuildConfig.SUPABASE_KEY
-        ) {
-            install(Postgrest)
-            install(Storage)
-            install(Functions)
-            install(Auth)
-        }
-    }
 
     @Provides
     @Singleton

@@ -79,7 +79,7 @@ import com.yustar.dashboard.presentation.widget.SelectAlbumBottomSheetDialog
 @Composable
 fun PostScreen(
     onClose: () -> Unit,
-    onNext: (Uri) -> Unit,
+    onNext: () -> Unit,
     viewModel: PostViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -144,7 +144,7 @@ fun PostScreen(
 fun PostContent(
     uiState: PostUiState,
     onClose: () -> Unit,
-    onNext: (Uri) -> Unit,
+    onNext: () -> Unit,
     selectedImage: LocalMedia?,
     localImages: List<LocalMedia>,
     selectedAlbum: AlbumItem?,
@@ -190,7 +190,7 @@ fun PostContent(
                     actions = {
                         TextButton(
                             onClick = { 
-                                selectedImage?.uri?.let { onNext(it) }
+                                selectedImage?.uri?.let { onNext() }
                             },
                             modifier = Modifier.testTag("post_next_button"),
                             enabled = selectedImage != null

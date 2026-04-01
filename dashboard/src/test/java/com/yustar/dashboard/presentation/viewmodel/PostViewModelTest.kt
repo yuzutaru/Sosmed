@@ -101,16 +101,17 @@ class PostViewModelTest {
 
     @Test
     fun `onEvent OnAlbumSelected should update selectedAlbum and load images`() = runTest {
+        advanceUntilIdle()
         val album = albums[1]
         val newImages = listOf(LocalMedia(id = 3L, uri = mockUri, name = "image3.jpg", dateAdded = 3000L))
-        every { getLocalImagesUseCase(album.id, any()) } returns flowOf(newImages)
+        every { getLocalImagesUseCase(album.id, MediaType.PHOTOS) } returns flowOf(newImages)
 
         viewModel.onEvent(PostUiEvent.OnAlbumSelected(album))
         advanceUntilIdle()
 
         assertEquals(album, viewModel.uiState.value.selectedAlbum)
         assertEquals(newImages, viewModel.uiState.value.localImages)
-        verify { getLocalImagesUseCase(album.id, any()) }
+        verify { getLocalImagesUseCase(album.id, MediaType.PHOTOS) }
     }
 
     @Test
@@ -125,5 +126,18 @@ class PostViewModelTest {
         val tab = 1
         viewModel.onEvent(PostUiEvent.OnTabSelected(tab))
         assertEquals(tab, viewModel.uiState.value.selectedTab)
+    }
+
+    @Test
+    fun `onEvent OnCaptionChanged should update caption`() = runTest {
+        val caption = "New post caption"
+        viewModel.onEvent(PostUiEvent.OnCaptionChanged(caption))
+        assertEquals(caption, viewModel.uiState.value.caption)
+    }
+
+    @Test
+    fun `onEvent OnShareClick should be handled`() = runTest {
+        // Verify no crash occurs when OnShareClick is triggered
+        viewModel.onEvent(PostUiEvent.OnShareClick)
     }
 }

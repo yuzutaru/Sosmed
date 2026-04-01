@@ -1,8 +1,8 @@
-package com.yustar.pokeapp_jetpackcompose
+package com.yustar.sosmed
 
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.test.assertIsDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
@@ -13,52 +13,51 @@ import com.yustar.auth.R
 import com.yustar.auth.domain.LoginResult
 import com.yustar.auth.domain.LoginUserUseCase
 import com.yustar.auth.domain.RegisterUserUseCase
-import com.yustar.auth.presentation.viewmodel.LoginViewModel
-import com.yustar.auth.presentation.viewmodel.RegisterViewModel
-import com.yustar.sosmed.SosmedAppNavHost
+import com.yustar.dashboard.di.SupabaseModule
+import dagger.hilt.android.testing.BindValue
+import dagger.hilt.android.testing.HiltAndroidRule
+import dagger.hilt.android.testing.HiltAndroidTest
+import dagger.hilt.android.testing.UninstallModules
+import io.github.jan.supabase.SupabaseClient
+import io.mockk.coEvery
 import io.mockk.mockk
-import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
-import org.koin.core.context.startKoin
-import org.koin.core.context.stopKoin
-import org.koin.core.module.dsl.viewModel
-import org.koin.dsl.module
-import org.koin.test.KoinTest
 
-class NavigationTest : KoinTest {
+@UninstallModules(SupabaseModule::class)
+@HiltAndroidTest
+class NavigationTest {
 
-    @get:Rule
-    val composeTestRule = createComposeRule()
+    @get:Rule(order = 0)
+    val hiltRule = HiltAndroidRule(this)
+
+    @get:Rule(order = 1)
+    val composeTestRule = createAndroidComposeRule<HiltTestActivity>()
 
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val fakeLoginUserUseCase = FakeLoginUserUseCase()
+
+    @BindValue
+    val loginUserUseCase: LoginUserUseCase = mockk(relaxed = true)
+
+    @BindValue
+    val registerUserUseCase: RegisterUserUseCase = mockk(relaxed = true)
+
+    // Mocking SupabaseClient to prevent ExceptionInInitializerError during initialization
+    @BindValue
+    val supabaseClient: SupabaseClient = mockk(relaxed = true)
 
     @Before
     fun setup() {
-        stopKoin()
-        startKoin {
-            modules(module {
-                factory<LoginUserUseCase> { fakeLoginUserUseCase }
-                factory<RegisterUserUseCase> { mockk(relaxed = true) }
-                viewModel { LoginViewModel(get()) }
-                viewModel { RegisterViewModel(get()) }
-            })
-        }
-    }
-
-    @After
-    fun tearDown() {
-        stopKoin()
+        hiltRule.inject()
     }
 
     @Test
     fun navHost_startDestinationIsLogin() {
         lateinit var navController: TestNavHostController
         composeTestRule.setContent {
-            navController = TestNavHostController(LocalContext.current)
+            navController = TestNavHostController(context)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
             SosmedAppNavHost(navController = navController, startDestination = "login_route")
         }
@@ -72,10 +71,11 @@ class NavigationTest : KoinTest {
 
     @Test
     fun navHost_loginSuccess_navigatesToMenu() {
-        fakeLoginUserUseCase.result = LoginResult.Success
+        coEvery { loginUserUseCase.invoke(any(), any()) } returns LoginResult.Success
+
         lateinit var navController: TestNavHostController
         composeTestRule.setContent {
-            navController = TestNavHostController(LocalContext.current)
+            navController = TestNavHostController(context)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
             SosmedAppNavHost(navController = navController, startDestination = "login_route")
         }
@@ -96,7 +96,7 @@ class NavigationTest : KoinTest {
     fun navHost_clickRegister_navigatesToRegister() {
         lateinit var navController: TestNavHostController
         composeTestRule.setContent {
-            navController = TestNavHostController(LocalContext.current)
+            navController = TestNavHostController(context)
             navController.navigatorProvider.addNavigator(ComposeNavigator())
             SosmedAppNavHost(navController = navController, startDestination = "login_route")
         }
@@ -107,5 +107,22 @@ class NavigationTest : KoinTest {
         // Verify current destination is "register"
         composeTestRule.waitForIdle()
         assertEquals("register", navController.currentBackStackEntry?.destination?.route)
+    }
+
+    @Test
+    fun navHost_fromMenu_clickAdd_navigatesToPost() {
+        lateinit var navController: TestNavHostController
+        composeTestRule.setContent {
+            navController = TestNavHostController(context)
+            navController.navigatorProvider.addNavigator(ComposeNavigator())
+            SosmedAppNavHost(navController = navController, startDestination = "menu_route")
+        }
+
+        // Click Add button (Create) in Dashboard
+        composeTestRule.onNodeWithContentDescription("Add").performClick()
+
+        // Verify current destination is "post"
+        composeTestRule.waitForIdle()
+        assertEquals("post", navController.currentBackStackEntry?.destination?.route)
     }
 }

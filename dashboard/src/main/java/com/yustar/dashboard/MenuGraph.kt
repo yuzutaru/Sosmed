@@ -1,6 +1,8 @@
 package com.yustar.dashboard
 
 import android.net.Uri
+import androidx.compose.runtime.remember
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -10,6 +12,8 @@ import androidx.navigation.navigation
 import com.yustar.dashboard.presentation.screen.DashboardScreen
 import com.yustar.dashboard.presentation.screen.PostEditScreen
 import com.yustar.dashboard.presentation.screen.PostScreen
+import com.yustar.dashboard.presentation.screen.SetCaptionScreen
+import com.yustar.dashboard.presentation.viewmodel.PostViewModel
 
 /**
  * Created by Yustar Pramudana on 08/03/26.
@@ -23,13 +27,19 @@ fun NavGraphBuilder.menuGraph(navController: NavHostController) {
                 onAddClick = { navController.navigate("post") }
             )
         }
-        composable("post") {
+        composable("post") { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("menu_route")
+            }
+            val sharedViewModel: PostViewModel = hiltViewModel(parentEntry)
+
             // PostScreen
             PostScreen(
                 onClose = { navController.popBackStack() },
-                onNext = { uri ->
-                    navController.navigate("post_edit/${Uri.encode(uri.toString())}")
-                }
+                onNext = {
+                    navController.navigate("post_caption")
+                },
+                viewModel = sharedViewModel
             )
         }
         composable(
@@ -40,10 +50,26 @@ fun NavGraphBuilder.menuGraph(navController: NavHostController) {
         ) { backStackEntry ->
             val mediaUriString = backStackEntry.arguments?.getString("mediaUri")
             val mediaUri = Uri.parse(Uri.decode(mediaUriString))
+
+            // Post Edit Screen
             PostEditScreen(
                 mediaUri = mediaUri,
                 onClose = { navController.popBackStack() },
                 onNext = { /* Navigate to final post screen */ }
+            )
+        }
+        composable(
+            route = "post_caption"
+        ) { backStackEntry ->
+            val parentEntry = remember(backStackEntry) {
+                navController.getBackStackEntry("menu_route")
+            }
+            val sharedViewModel: PostViewModel = hiltViewModel(parentEntry)
+
+            // Post Set Caption Screen
+            SetCaptionScreen(
+                viewModel = sharedViewModel, onEvent = {},
+                onBack = { navController.popBackStack() }
             )
         }
     }

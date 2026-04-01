@@ -1,4 +1,4 @@
-package com.yustar.pokeapp_jetpackcompose
+package com.yustar.sosmed
 
 import com.yustar.auth.domain.LoginResult
 import com.yustar.auth.domain.LoginUserUseCase

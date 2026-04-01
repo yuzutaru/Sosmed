@@ -10,4 +10,11 @@
     <string name="videos">Videos</string>
     <string name="albums">Albums</string>
     <string name="see_all">See all</string>
+    <string name="add_a_caption">Add a caption...</string>
+    <string name="poll">Poll</string>
+    <string name="prompt">Prompt</string>
+    <string name="add_audio">Add audio</string>
+    <string name="tag_people">Tag people</string>
+    <string name="add_location">Add location</string>
+    <string name="share">Share</string>
 </resources>
