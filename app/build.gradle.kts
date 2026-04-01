@@ -107,6 +107,9 @@ dependencies {
     implementation(libs.coil.video)
 
     // Supabase (Needed in tests to mock SupabaseClient)
-    androidTestImplementation(libs.io.github.jan.tennert.supabase.postgrest)
-    androidTestImplementation(libs.io.github.jan.tennert.supabase.auth)
+    androidTestImplementation(libs.supabase.postgrest)
+    androidTestImplementation(libs.supabase.auth)
+
+    // Ktor Engine
+    implementation(libs.ktor.client.android)
 }
