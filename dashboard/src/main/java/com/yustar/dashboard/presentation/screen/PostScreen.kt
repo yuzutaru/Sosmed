@@ -135,7 +135,10 @@ fun PostScreen(
             viewModel.onEvent(PostUiEvent.OnAlbumSelected(album))
         },
         onShowAlbumSelection = { viewModel.onEvent(PostUiEvent.ShowAlbumSelection(it)) },
-        viewModel = viewModel
+        onCategoryClicked = { mediaType ->
+            viewModel.loadLocalImages(mediaType = mediaType)
+            viewModel.onEvent(PostUiEvent.ShowAlbumSelection(false))
+        }
     )
 }
 
@@ -154,18 +157,15 @@ fun PostContent(
     onTabSelected: (Int) -> Unit,
     onAlbumSelected: (AlbumItem) -> Unit,
     onShowAlbumSelection: (Boolean) -> Unit,
-    viewModel: PostViewModel? = null
+    onCategoryClicked: (MediaType) -> Unit,
 ) {
 
-    if ( uiState.showAlbumSelection && viewModel != null) {
+    if ( uiState.showAlbumSelection) {
         SelectAlbumBottomSheetDialog(
+            uiState = uiState,
             onDismissRequest = { onShowAlbumSelection(false) },
             onAlbumSelected = onAlbumSelected,
-            onCategoryClicked = {
-                mediaType -> viewModel.loadLocalImages(mediaType = mediaType)
-                viewModel.onEvent(PostUiEvent.ShowAlbumSelection(false))
-            },
-            viewModel = viewModel
+            onCategoryClicked = onCategoryClicked
         )
     }
 
@@ -374,9 +374,10 @@ fun PostContent(
 
         // Bottom Bar
         Column(
-            modifier = Modifier.fillMaxSize().padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 16.dp, end = 16.dp, bottom = 24.dp)
                 .navigationBarsPadding(),
-            verticalArrangement = Arrangement.Bottom,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Card(
@@ -424,7 +425,8 @@ fun NightModePreviewPostScreen() {
             onImageSelected = {},
             onTabSelected = {},
             onAlbumSelected = {},
-            onShowAlbumSelection = { _ -> }
+            onShowAlbumSelection = { _ -> },
+            onCategoryClicked = { _ -> }
         )
     }
 }
@@ -445,7 +447,8 @@ fun LightModePreviewPostScreen() {
             onImageSelected = {},
             onTabSelected = {},
             onAlbumSelected = {},
-            onShowAlbumSelection = { _ -> }
+            onShowAlbumSelection = { _ -> },
+            onCategoryClicked = { _ -> }
         )
     }
 }

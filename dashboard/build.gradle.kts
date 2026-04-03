@@ -14,6 +14,7 @@ android {
     defaultConfig {
         minSdk = 24
 
+        targetSdk = 35
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
@@ -34,6 +35,13 @@ android {
     buildFeatures {
         compose = true
     }
+    packaging {
+        resources {
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/LICENSE.md"
+            excludes += "/META-INF/LICENSE-notice.md"
+        }
+    }
 }
 
 kotlin {
@@ -52,6 +60,8 @@ dependencies {
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.material)
+    implementation(libs.androidx.appcompat)
 
     testImplementation(libs.junit)
     testImplementation(libs.io.mockk)
@@ -96,14 +106,15 @@ dependencies {
     implementation(libs.androidx.media3.ui)
 
     // Supabase
-    implementation(libs.io.github.jan.tennert.supabase.postgrest)
-    implementation(libs.io.github.jan.tennert.supabase.storage)
-    implementation(libs.io.github.jan.tennert.supabase.auth)
-    implementation(libs.io.github.jan.tennert.supabase.functions)
+    implementation(libs.supabase.postgrest)
+    implementation(libs.supabase.storage)
+    implementation(libs.supabase.auth)
+    implementation(libs.supabase.functions)
 
     // Serialization
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3")
+    implementation(libs.kotlinx.serialization.json)
 
     // Ktor
+    implementation(libs.ktor.client.android)
     implementation(libs.ktor.client.mock)
 }
