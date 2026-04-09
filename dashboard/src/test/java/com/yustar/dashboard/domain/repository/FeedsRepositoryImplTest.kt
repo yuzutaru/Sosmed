@@ -12,6 +12,7 @@ import com.yustar.dashboard.data.local.FeedsDatabase
 import com.yustar.dashboard.data.local.dao.PostDao
 import com.yustar.dashboard.data.remote.FeedsApi
 import com.yustar.dashboard.data.remote.SupabaseClientWrapper
+import com.yustar.dashboard.data.remote.model.LocationDto
 import com.yustar.dashboard.data.remote.model.MediaDto
 import com.yustar.dashboard.data.repository.FeedsRepositoryImpl
 import com.yustar.dashboard.domain.model.MediaType
@@ -325,5 +326,39 @@ class FeedsRepositoryImplTest {
         assertEquals("bucket2", result[1].id)
         assertEquals("Album 2", result[1].name)
         assertEquals("1", result[1].count)
+    }
+
+    @Test
+    fun `getLocations success returns list of locations`() = runTest {
+        // Given
+        val query = "Medan"
+        val locationsDto = listOf(
+            LocationDto(
+                placeId = 123L,
+                licence = "licence",
+                osmType = "node",
+                osmId = 456L,
+                boundingBox = listOf("1", "2", "3", "4"),
+                lat = "3.5952",
+                lon = "98.6722",
+                displayName = "Medan, North Sumatra, Indonesia",
+                classType = "place",
+                type = "city",
+                importance = 0.5
+            )
+        )
+        coEvery { api.getLocations(query = query) } returns locationsDto
+
+        // When
+        val result = repository.getLocations(query)
+
+        // Then
+        assertEquals(1, result.size)
+        assertEquals(123L, result[0].placeId)
+        assertEquals("3.5952", result[0].lat)
+        assertEquals("98.6722", result[0].lon)
+        assertEquals("Medan, North Sumatra, Indonesia", result[0].displayName)
+        assertEquals("city", result[0].type)
+        coVerify { api.getLocations(query = query) }
     }
 }

@@ -32,7 +32,6 @@ import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -49,13 +48,12 @@ import androidx.compose.ui.tooling.preview.Devices
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.yustar.core.ui.theme.SosmedTheme
 import com.yustar.dashboard.R
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.MediaType
-import com.yustar.dashboard.presentation.viewmodel.PostViewModel
+import com.yustar.dashboard.presentation.state.PostUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,9 +61,8 @@ fun SelectAlbumBottomSheetDialog(
     onDismissRequest: () -> Unit,
     onAlbumSelected: (AlbumItem) -> Unit,
     onCategoryClicked: (MediaType) -> Unit,
-    viewModel: PostViewModel
+    uiState: PostUiState
 ) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
     SelectAlbumBottomSheetDialogContent(

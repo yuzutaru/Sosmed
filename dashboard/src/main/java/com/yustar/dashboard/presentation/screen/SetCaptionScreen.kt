@@ -107,7 +107,7 @@ fun SetCaptionContent(
                 verticalAlignment = Alignment.Top
             ) {
                 AsyncImage(
-                    model = uiState.selectedAlbum,
+                    model = uiState.selectedImage?.uri,
                     contentDescription = null,
                     modifier = Modifier
                         .size(100.dp)
@@ -133,14 +133,14 @@ fun SetCaptionContent(
             }
 
             // Poll and Prompt Buttons
-            Row(
+            /*Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp)
             ) {
                 InputChip(
                     selected = false,
-                    onClick = { /* TODO */ },
+                    onClick = { *//* TODO *//* },
                     label = { Text(stringResource(R.string.poll)) },
                     leadingIcon = { Icon(Icons.Default.Menu, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     shape = RoundedCornerShape(8.dp)
@@ -148,21 +148,22 @@ fun SetCaptionContent(
                 Spacer(modifier = Modifier.width(8.dp))
                 InputChip(
                     selected = false,
-                    onClick = { /* TODO */ },
+                    onClick = { *//* TODO *//* },
                     label = { Text(stringResource(R.string.prompt)) },
                     leadingIcon = { Icon(Icons.Outlined.Search, contentDescription = null, modifier = Modifier.size(18.dp)) },
                     shape = RoundedCornerShape(8.dp)
                 )
-            }
+            }*/
 
             Spacer(modifier = Modifier.height(16.dp))
             HorizontalDivider(thickness = 0.5.dp, color = Color.LightGray.copy(alpha = 0.5f))
 
             // Menu Items
-            CaptionMenuItem(
+            // Add Music
+            /*CaptionMenuItem(
                 icon = Icons.Outlined.MusicNote,
                 label = stringResource(R.string.add_audio),
-                onClick = { /* TODO */ }
+                onClick = { *//* TODO *//* }
             )
 
             // Music suggestion chips (Optional placeholder based on image)
@@ -173,19 +174,21 @@ fun SetCaptionContent(
             ) {
                 items(listOf("Anuar & Ellina · Suasana Di Hari Raya", "Mothership")) { music ->
                     SuggestionChip(
-                        onClick = { /* TODO */ },
+                        onClick = { *//* TODO *//* },
                         label = { Text(music, fontSize = 12.sp) },
                         shape = RoundedCornerShape(16.dp)
                     )
                 }
             }
 
+            // Tag People
             CaptionMenuItem(
                 icon = Icons.Outlined.People,
                 label = stringResource(R.string.tag_people),
-                onClick = { /* TODO */ }
-            )
+                onClick = { *//* TODO *//* }
+            )*/
 
+            // Add Location
             CaptionMenuItem(
                 icon = Icons.Outlined.LocationOn,
                 label = stringResource(R.string.add_location),

@@ -5,6 +5,7 @@ import androidx.paging.PagingData
 import com.yustar.dashboard.data.remote.model.MediaDto
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.Location
 import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.model.Post
 import kotlinx.coroutines.flow.Flow
@@ -18,4 +19,5 @@ interface FeedsRepository {
     suspend fun uploadFile(path: String, token: String, bytes: ByteArray)
     fun getPublicUrl(path: String): String
     suspend fun createPost(caption: String, location: String, media: List<MediaDto>)
+    suspend fun getLocations(query: String): List<Location>
 }

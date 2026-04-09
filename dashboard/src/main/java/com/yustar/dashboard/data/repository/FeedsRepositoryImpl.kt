@@ -17,6 +17,7 @@ import com.yustar.dashboard.data.remote.SupabaseClientWrapper
 import com.yustar.dashboard.data.remote.model.MediaDto
 import com.yustar.dashboard.domain.model.AlbumItem
 import com.yustar.dashboard.domain.model.LocalMedia
+import com.yustar.dashboard.domain.model.Location
 import com.yustar.dashboard.domain.model.MediaType
 import com.yustar.dashboard.domain.model.Post
 import com.yustar.dashboard.domain.model.PostMedia
@@ -25,7 +26,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.builtins.ListSerializer
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.jsonObject
@@ -263,6 +263,18 @@ class FeedsRepositoryImpl(
                 put("p_media", Json.encodeToJsonElement(ListSerializer(MediaDto.serializer()), media))
             }
         )
+    }
+
+    override suspend fun getLocations(query: String): List<Location> {
+        return api.getLocations(query = query).map {
+            Location(
+                placeId = it.placeId,
+                lat = it.lat,
+                lon = it.lon,
+                displayName = it.displayName,
+                type = it.type
+            )
+        }
     }
 
     private data class AlbumData(val name: String, val count: Int, val thumbnailUri: String)
